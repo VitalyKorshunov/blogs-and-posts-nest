@@ -14,10 +14,16 @@ import { HydratedDocument, Model } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ type: String, required: true })
+  @Prop({
+    type: String,
+    required: true,
+    minlength: 3,
+    maxlength: 10,
+    unique: true,
+  })
   login: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, unique: true })
   email: string;
 
   @Prop({ type: String, required: true })
@@ -32,16 +38,16 @@ export class User {
   @Prop({ type: Date })
   createdAt: Date;
 
-  static createUser(dto: CreateUserDTO): User {
+  static createUser(dto: CreateUserDTO): UserDocument {
     const user = new this();
     user.login = dto.login;
     user.email = dto.email;
-    user.passHash = dto.passHash;
+    user.passHash = dto.password;
     user.emailConfirmation.expirationDate = add(new Date(), { minutes: 10 });
     user.emailConfirmation.confirmationCode = uuidv4();
     user.emailConfirmation.isConfirmed = false;
 
-    return user;
+    return user as UserDocument;
   }
 
   canBeConfirmed(): boolean {
