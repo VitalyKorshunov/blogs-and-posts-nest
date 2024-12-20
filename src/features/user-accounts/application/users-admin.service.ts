@@ -4,7 +4,6 @@ import { User, UserModelType } from '../domain/user.entity';
 import { CreateUserDTO, UserId } from '../dto/user.dto';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { HashService } from './hash.service';
-import { ErrorsType } from '../../types/errors.types';
 
 @Injectable()
 export class UsersAdminService {
@@ -27,8 +26,10 @@ export class UsersAdminService {
     return !!isExist;
   }
 
-  async createUserByAdmin(dto: CreateUserDTO): Promise<UserId | ErrorsType> {
-    const errors: ErrorsType = {
+  async createUserByAdmin(
+    dto: CreateUserDTO,
+  ): Promise<UserId /*| ErrorsType*/> {
+    /*const errors: ErrorsType = {
       errorsMessages: [],
     };
     const isLoginExist = await this.checkExistValueInField('login', dto.login);
@@ -46,7 +47,7 @@ export class UsersAdminService {
 
     if (errors.errorsMessages.length) {
       return errors;
-    }
+    }*/
 
     const passHash = await this.hashService.generateHash(dto.password);
 
@@ -63,7 +64,11 @@ export class UsersAdminService {
     return user._id.toString();
   }
 
-  async deleteUser(id: UserId): Promise<number> {
-    return this.usersRepository.deleteUser(id);
+  async deleteUser(id: UserId): Promise<void> {
+    const user = await this.usersRepository.findUserById(id);
+    user.permanentDelete();
+    await this.usersRepository.save(user);
+
+    return;
   }
 }

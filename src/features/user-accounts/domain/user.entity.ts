@@ -12,6 +12,11 @@ import {
 import { CreateUserDTO, RecoveryPassUserDTO } from '../dto/user.dto';
 import { HydratedDocument, Model } from 'mongoose';
 
+enum DeletionStatus {
+  NotDeleted = 'not-deleted',
+  PermanentDeleted = 'permanent-deleted',
+}
+
 @Schema({ timestamps: true })
 export class User {
   @Prop({
@@ -37,6 +42,12 @@ export class User {
 
   @Prop({ type: Date })
   createdAt: Date;
+
+  @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
+  deletionStatus: DeletionStatus;
+
+  @Prop({ type: Date, default: null })
+  deletedAt: Date | null;
 
   static createUser(dto: CreateUserDTO): UserDocument {
     const user = new this();
@@ -108,6 +119,11 @@ export class User {
 
   getPassHash(): string {
     return this.passHash;
+  }
+
+  permanentDelete(): void {
+    this.deletionStatus = DeletionStatus.PermanentDeleted;
+    this.deletedAt = new Date();
   }
 
   // getId(): string {

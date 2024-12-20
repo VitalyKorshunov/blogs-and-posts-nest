@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { ObjectId } from 'mongodb';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserId } from '../dto/user.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -17,10 +18,12 @@ export class UsersRepository {
     return this.UserModel.findOne(queryToDb);
   }
 
-  async deleteUser(userId: string): Promise<number> {
-    const user = await this.UserModel.deleteOne({ _id: new ObjectId(userId) });
+  async findUserById(userId: UserId): Promise<UserDocument> {
+    const user = await this.UserModel.findById(userId);
 
-    return user.deletedCount;
+    if (!user) throw new NotFoundException('user not found');
+
+    return user;
   }
 
   async save(user: UserDocument) {
