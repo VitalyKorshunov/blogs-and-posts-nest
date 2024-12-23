@@ -7,32 +7,32 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBasicAuth, ApiParam } from '@nestjs/swagger';
+import { ApiBasicAuth } from '@nestjs/swagger';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
-import { UsersAdminService } from '../application/users-admin.service';
-import { CreateUserDTO } from '../dto/user.dto';
+import { UsersService } from '../application/users.service';
+import { UserId } from '../dto/user.dto';
 import { UserViewDto } from './view-dto/users.view-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
+import { CreateUserInputDTO } from './input-dto/users.input-dto';
 
 @Controller('users')
 @ApiBasicAuth('basicAuth')
 export class UsersController {
   constructor(
-    private usersService: UsersAdminService,
+    private usersService: UsersService,
     private usersQueryRepository: UsersQueryRepository,
   ) {}
 
   @Post()
-  async createUser(@Body() body: CreateUserDTO): Promise<UserViewDto> {
-    const newUserId = await this.usersService.createUserByAdmin(body);
+  async createUser(@Body() body: CreateUserInputDTO): Promise<UserViewDto> {
+    const userId: UserId = await this.usersService.createUserByAdmin(body);
 
-    return await this.usersQueryRepository.findUserOrNotFoundError(newUserId);
+    return await this.usersQueryRepository.findUserOrNotFoundError(userId);
   }
 
-  @ApiParam({ name: 'id' })
   @Delete(':id')
-  async deleteUser(@Param('id') id: string) {
+  async deleteUser(@Param('id') id: UserId) {
     return await this.usersService.deleteUser(id);
   }
 

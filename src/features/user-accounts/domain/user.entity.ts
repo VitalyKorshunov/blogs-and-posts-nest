@@ -11,11 +11,7 @@ import {
 } from './email-confirmation.schema';
 import { CreateUserDTO, RecoveryPassUserDTO } from '../dto/user.dto';
 import { HydratedDocument, Model } from 'mongoose';
-
-enum DeletionStatus {
-  NotDeleted = 'not-deleted',
-  PermanentDeleted = 'permanent-deleted',
-}
+import { DeletionStatus } from '../../../core/dto/deletion-statuses';
 
 @Schema({ timestamps: true })
 export class User {
@@ -34,7 +30,7 @@ export class User {
   @Prop({ type: String, required: true })
   passHash: string;
 
-  @Prop({ type: RecoveryPasswordSchema, required: true })
+  @Prop({ type: RecoveryPasswordSchema })
   recoveryPassword: RecoveryPassword;
 
   @Prop({ type: EmailConfirmationSchema, required: true })
@@ -54,10 +50,11 @@ export class User {
     user.login = dto.login;
     user.email = dto.email;
     user.passHash = dto.password;
-    user.emailConfirmation.expirationDate = add(new Date(), { minutes: 10 });
-    user.emailConfirmation.confirmationCode = uuidv4();
-    user.emailConfirmation.isConfirmed = false;
-
+    user.emailConfirmation = {
+      expirationDate: add(new Date(), { minutes: 10 }),
+      confirmationCode: uuidv4(),
+      isConfirmed: false,
+    };
     return user as UserDocument;
   }
 

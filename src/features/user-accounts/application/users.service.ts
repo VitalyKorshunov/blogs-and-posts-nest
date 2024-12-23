@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserModelType } from '../domain/user.entity';
+import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { CreateUserDTO, UserId } from '../dto/user.dto';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { HashService } from './hash.service';
 
 @Injectable()
-export class UsersAdminService {
+export class UsersService {
   constructor(
     @InjectModel(User.name)
     private UserModel: UserModelType,
@@ -65,7 +65,7 @@ export class UsersAdminService {
   }
 
   async deleteUser(id: UserId): Promise<void> {
-    const user = await this.usersRepository.findUserById(id);
+    const user: UserDocument = await this.usersRepository.findUserById(id);
     user.permanentDelete();
     await this.usersRepository.save(user);
 

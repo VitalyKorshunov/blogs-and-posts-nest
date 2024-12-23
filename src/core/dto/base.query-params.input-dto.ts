@@ -8,7 +8,7 @@ class PaginationParams {
   pageSize: number = 10;
 
   calculateSkip() {
-    return this.pageNumber * this.pageSize;
+    return (this.pageNumber - 1) * this.pageSize;
   }
 }
 
