@@ -22,7 +22,7 @@ export class UsersQueryRepository {
     return !!user;
   }
 
-  async findUserOrNotFoundError(id: UserId): Promise<UserViewDto> {
+  async getUserByIdOrNotFoundError(id: UserId): Promise<UserViewDto> {
     const user: UserDocument | null = await this.UserModel.findById(id);
 
     if (!user) throw new NotFoundException('user not found');
@@ -30,10 +30,12 @@ export class UsersQueryRepository {
     return UserViewDto.mapToView(user);
   }
 
-  async findAllUsers(
+  async getAllUsers(
     query: GetUsersQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
-    const filter: FilterQuery<User> = {};
+    const filter: FilterQuery<User> = {
+      deletionStatus: DeletionStatus.NotDeleted,
+    };
 
     if (query.searchLoginTerm) {
       filter.$or = filter.$or || [];
@@ -49,18 +51,12 @@ export class UsersQueryRepository {
       });
     }
 
-    const users = await this.UserModel.find({
-      ...filter,
-      deletionStatus: DeletionStatus.NotDeleted,
-    })
+    const users = await this.UserModel.find(filter)
       .sort({ [query.sortBy]: query.sortDirection })
       .skip(query.calculateSkip())
       .limit(query.pageSize);
 
-    const totalUsers = await this.UserModel.countDocuments({
-      ...filter,
-      deletionStatus: DeletionStatus.NotDeleted,
-    });
+    const totalUsers = await this.UserModel.countDocuments(filter);
 
     const items = users.map((user) => UserViewDto.mapToView(user));
 

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TestingController } from './testing.controller';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
-import { BlogsModule } from '../blogger-platform/blogs/blogs.module';
+import { BloggerPlatformModule } from '../blogger-platform/blogger-platform.module';
 
 @Module({
-  imports: [UserAccountsModule, BlogsModule],
+  imports: [UserAccountsModule, BloggerPlatformModule],
   controllers: [TestingController],
 })
 export class TestingModule {}

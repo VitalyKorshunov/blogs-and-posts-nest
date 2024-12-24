@@ -22,7 +22,7 @@ export class BlogsQueryRepository {
     return !!blog;
   }
 
-  async findBlogByIdOrNotFoundError(blogId: BlogId): Promise<BlogViewDto> {
+  async getBlogByIdOrNotFoundError(blogId: BlogId): Promise<BlogViewDto> {
     const blog = await this.BlogModel.findOne({
       _id: new ObjectId(blogId),
       deletionStatus: DeletionStatus.NotDeleted,
@@ -33,10 +33,12 @@ export class BlogsQueryRepository {
     return BlogViewDto.mapToView(blog);
   }
 
-  async findAllBlogs(
+  async getAllBlogs(
     query: GetBlogsQueryParamsInputDto,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
-    const filter: FilterQuery<Blog> = {};
+    const filter: FilterQuery<Blog> = {
+      deletionStatus: DeletionStatus.NotDeleted,
+    };
 
     if (query.searchNameTerm) {
       filter.$or = filter.$or || [];
@@ -45,25 +47,19 @@ export class BlogsQueryRepository {
       });
     }
 
-    const blogs = await this.BlogModel.find({
-      ...filter,
-      deletionStatus: DeletionStatus.NotDeleted,
-    })
+    const blogs = await this.BlogModel.find(filter)
       .sort({ [query.sortBy]: query.sortDirection })
       .skip(query.calculateSkip())
       .limit(query.pageSize);
 
-    const totalPosts = await this.BlogModel.countDocuments({
-      ...filter,
-      deletionStatus: DeletionStatus.NotDeleted,
-    });
+    const totalBlogs = await this.BlogModel.countDocuments(filter);
 
     const items = blogs.map((blog) => BlogViewDto.mapToView(blog));
 
     return PaginatedViewDto.mapToView({
       page: query.pageNumber,
       pageSize: query.pageSize,
-      totalCount: totalPosts,
+      totalCount: totalBlogs,
       items,
     });
   }

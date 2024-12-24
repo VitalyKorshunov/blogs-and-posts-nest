@@ -17,6 +17,16 @@ export enum SortDirection {
   Desc = 'desc',
 }
 
+/**
+ * Abstract base class for handling sortable pagination parameters.
+ *
+ * This class extends the basic pagination parameters (`PaginationParams`)
+ * and adds sorting capabilities. It includes a default sorting direction
+ * (`sortDirection`) set to descending order and requires a concrete
+ * implementation to specify the sorting field (`sortBy`).
+ *
+ * @template T - The type of the field used for sorting.
+ */
 export abstract class BaseSortablePaginationParams<T> extends PaginationParams {
   sortDirection: SortDirection = SortDirection.Desc;
   abstract sortBy: T;

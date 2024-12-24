@@ -20,29 +20,39 @@ import { BlogId } from '../dto/blog.dto';
 import { BlogViewDto } from './view-dto/blog-view.dto';
 import { GetBlogsQueryParamsInputDto } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { PostsQueryRepository } from '../../posts/infrastructure/posts.query-repository';
+import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
+import { PostViewDto } from '../../posts/api/view-dto/post.view-dto';
+import {
+  CreatePostForBlogInputDTO,
+  CreatePostInputDTO,
+} from '../../posts/api/input-dto/post.input-dto';
+import { PostsService } from '../../posts/application/posts.service';
 
 @Controller('blogs')
 export class BlogsControllers {
   constructor(
     private blogsService: BlogsService,
     private blogsQueryRepository: BlogsQueryRepository,
-    /*    private postsService: PostsService,
-    private postsQueryRepository: PostsQueryRepository,*/
+    private postsService: PostsService,
+    private postsQueryRepository: PostsQueryRepository,
   ) {}
 
   @Post()
   async createBlog(@Body() body: CreateBlogInputDTO): Promise<BlogViewDto> {
     const blogId: BlogId = await this.blogsService.createBlog(body);
 
-    return await this.blogsQueryRepository.findBlogByIdOrNotFoundError(blogId);
+    return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
   @Put(':id')
   async updateBlog(
     @Body() body: UpdateBlogInputDTO,
     @Param('id') id: BlogId,
-  ): Promise<void> {
+  ): Promise<BlogViewDto> {
     await this.blogsService.updateBlog(body, id);
+
+    return this.blogsQueryRepository.getBlogByIdOrNotFoundError(id);
   }
 
   @Delete(':id')
@@ -52,55 +62,37 @@ export class BlogsControllers {
   }
 
   @Get(':id')
-  async findBlog(@Param('id') id: BlogId): Promise<BlogViewDto> {
-    return await this.blogsQueryRepository.findBlogByIdOrNotFoundError(id);
+  async getBlog(@Param('id') id: BlogId): Promise<BlogViewDto> {
+    return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(id);
   }
 
   @Get()
-  async findAllBlogs(
+  async getAllBlogs(
     @Query() query: GetBlogsQueryParamsInputDto,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
-    return await this.blogsQueryRepository.findAllBlogs(query);
+    return await this.blogsQueryRepository.getAllBlogs(query);
   }
 
-  /*  async createPostInBlog(
-   req: Request<ParamType, {}, BlogPostInputModel>,
-   res: Response<PostViewModel>,
- ) {
-   const post: PostInputModel = {
-     title: req.body.title,
-     content: req.body.content,
-     blogId: req.params.id,
-     shortDescription: req.body.shortDescription,
-   };
+  @Post(':id/posts')
+  async createPostInBlog(
+    @Param('id') id: BlogId,
+    @Body() body: CreatePostForBlogInputDTO,
+  ): Promise<PostViewDto> {
+    //TODO review from BLOG controller to POST SERVICE
+    const dto: CreatePostInputDTO = {
+      ...body,
+      blogId: id,
+    };
+    const postId = await this.postsService.createPost(dto);
 
-   const result = await this.postsService.createPostInBlog(post);
+    return this.postsQueryRepository.getPostByIdOrNotFoundError(postId);
+  }
 
-   if (result.statusCode === StatusCode.Success) {
-     const postId: PostId = result.data;
-
-     const post: PostViewModel =
-       await this.postsQueryRepository.findPostById(postId);
-     res.status(201).json(post);
-   } else {
-     res.sendStatus(404);
-   }
- }*/
-
-  /*  async getPostsInBlog(
-    req: Request /!*<ParamType, {}, {}, SortQueryType>*!/,
-    res: Response<PostsForBlogSortViewModel> /!*<BlogPostFilterViewModel>*!/,
-  ) {
-    const result = await this.blogsQueryRepository.getSortedPostsInBlog(
-      req.params.id,
-      req.query,
-    );
-
-    if (result.statusCode === StatusCode.Success) {
-      const sortedPostsInBlog: PostsForBlogSortViewModel = result.data;
-      res.status(200).json(sortedPostsInBlog);
-    } else {
-      res.sendStatus(404);
-    }
-  }*/
+  @Get(':id/posts')
+  async getAllPostsForBlog(
+    @Param('id') id: BlogId,
+    @Query() query: GetPostsQueryParams,
+  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    return await this.postsQueryRepository.getAllPostsForBlog(query, id);
+  }
 }

@@ -12,6 +12,7 @@ import {
 import { CreateUserDTO, RecoveryPassUserDTO } from '../dto/user.dto';
 import { HydratedDocument, Model } from 'mongoose';
 import { DeletionStatus } from '../../../core/dto/deletion-statuses';
+import { BadRequestException } from '@nestjs/common';
 
 @Schema({ timestamps: true })
 export class User {
@@ -119,6 +120,9 @@ export class User {
   }
 
   permanentDelete(): void {
+    if (this.deletionStatus === DeletionStatus.PermanentDeleted)
+      throw new BadRequestException('user already deleted');
+
     this.deletionStatus = DeletionStatus.PermanentDeleted;
     this.deletedAt = new Date();
   }

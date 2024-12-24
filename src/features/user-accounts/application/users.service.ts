@@ -65,7 +65,8 @@ export class UsersService {
   }
 
   async deleteUser(id: UserId): Promise<void> {
-    const user: UserDocument = await this.usersRepository.findUserById(id);
+    const user: UserDocument =
+      await this.usersRepository.getUserByIdOrNotFoundError(id);
     user.permanentDelete();
     await this.usersRepository.save(user);
 

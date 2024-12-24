@@ -19,7 +19,7 @@ export class UsersRepository {
     return this.UserModel.findOne(queryToDb);
   }
 
-  async findUserById(userId: UserId): Promise<UserDocument> {
+  async getUserByIdOrNotFoundError(userId: UserId): Promise<UserDocument> {
     const user = await this.UserModel.findOne({
       _id: new ObjectId(userId),
       deletionStatus: DeletionStatus.NotDeleted,
@@ -30,7 +30,7 @@ export class UsersRepository {
     return user;
   }
 
-  async save(user: UserDocument) {
+  async save(user: UserDocument): Promise<void> {
     await user.save();
   }
 }

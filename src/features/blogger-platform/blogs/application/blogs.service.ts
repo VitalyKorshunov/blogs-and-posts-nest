@@ -27,7 +27,7 @@ export class BlogsService {
   }
 
   async deleteBlog(blogId: BlogId): Promise<void> {
-    const blog = await this.blogsRepository.findBlogById(blogId);
+    const blog = await this.blogsRepository.getBlogByIdOrNotFoundError(blogId);
 
     blog.permanentDelete();
 
@@ -35,7 +35,8 @@ export class BlogsService {
   }
 
   async updateBlog(dto: UpdateBlogInputDTO, blogId: BlogId): Promise<void> {
-    const blog: BlogDocument = await this.blogsRepository.findBlogById(blogId);
+    const blog: BlogDocument =
+      await this.blogsRepository.getBlogByIdOrNotFoundError(blogId);
 
     blog.updateBlog({
       name: dto.name,

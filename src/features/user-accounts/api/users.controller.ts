@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Query,
@@ -28,10 +30,11 @@ export class UsersController {
   async createUser(@Body() body: CreateUserInputDTO): Promise<UserViewDto> {
     const userId: UserId = await this.usersService.createUserByAdmin(body);
 
-    return await this.usersQueryRepository.findUserOrNotFoundError(userId);
+    return await this.usersQueryRepository.getUserByIdOrNotFoundError(userId);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: UserId) {
     return await this.usersService.deleteUser(id);
   }
@@ -40,6 +43,6 @@ export class UsersController {
   async findAllUsers(
     @Query() query: GetUsersQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
-    return await this.usersQueryRepository.findAllUsers(query);
+    return await this.usersQueryRepository.getAllUsers(query);
   }
 }
