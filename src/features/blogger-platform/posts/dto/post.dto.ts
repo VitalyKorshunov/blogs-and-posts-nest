@@ -14,4 +14,16 @@ export class UpdatePostDTO {
   blogName: string;
 }
 
+export interface UpdatePostLikesInfoDTO {
+  dislikesCount: number;
+  likesCount: number;
+  lastNewestLikes: PostLastNewestLikes[];
+}
+
+export interface PostLastNewestLikes {
+  addedAt: string;
+  login: string;
+  userId: string;
+}
+
 export type PostId = string;
