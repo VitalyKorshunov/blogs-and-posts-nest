@@ -40,6 +40,9 @@ export class User {
   @Prop({ type: Date })
   createdAt: Date;
 
+  @Prop({ type: Date })
+  updatedAt: Date;
+
   @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
   deletionStatus: DeletionStatus;
 

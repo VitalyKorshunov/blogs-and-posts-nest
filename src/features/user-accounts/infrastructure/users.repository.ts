@@ -16,7 +16,19 @@ export class UsersRepository {
     const queryToDb =
       field === 'id' ? { _id: new ObjectId(value) } : { [field]: value };
 
-    return this.UserModel.findOne(queryToDb);
+    return this.UserModel.findOne({
+      ...queryToDb,
+      deletionStatus: DeletionStatus.NotDeleted,
+    });
+  }
+
+  async checkUserFoundOrNotFoundError(userId: UserId): Promise<void> {
+    const isUserFound: number = await this.UserModel.countDocuments({
+      _id: new ObjectId(userId),
+      deletionStatus: DeletionStatus.NotDeleted,
+    });
+
+    if (!isUserFound) throw new NotFoundException('user not found');
   }
 
   async getUserByIdOrNotFoundError(userId: UserId): Promise<UserDocument> {

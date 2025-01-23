@@ -17,13 +17,17 @@ export class UsersQueryRepository {
   async isUserFound(userId: UserId): Promise<boolean> {
     const user: number = await this.UserModel.countDocuments({
       _id: new ObjectId(userId),
+      deletionStatus: DeletionStatus.NotDeleted,
     });
 
     return !!user;
   }
 
   async getUserByIdOrNotFoundError(id: UserId): Promise<UserViewDto> {
-    const user: UserDocument | null = await this.UserModel.findById(id);
+    const user: UserDocument | null = await this.UserModel.findOne({
+      _id: new ObjectId(id),
+      deletionStatus: DeletionStatus.NotDeleted,
+    });
 
     if (!user) throw new NotFoundException('user not found');
 
