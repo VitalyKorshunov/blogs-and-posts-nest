@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogModelType } from '../domain/blog.entity';
 import { BlogId } from '../dto/blog.dto';
 import { ObjectId } from 'mongodb';
-import { BlogViewDto } from '../api/view-dto/blog-view.dto';
+import { BlogViewDto } from '../api/view-dto/blogs.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { GetBlogsQueryParamsInputDto } from '../api/input-dto/get-blogs-query-params.input-dto';
 import { FilterQuery } from 'mongoose';
@@ -13,13 +13,13 @@ import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
 export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
 
-  async isBlogFound(blogId: BlogId): Promise<boolean> {
+  async checkBlogFoundOrNotFoundError(blogId: BlogId): Promise<void> {
     const blog: number = await this.BlogModel.countDocuments({
       _id: new ObjectId(blogId),
       deletionStatus: DeletionStatus.NotDeleted,
     });
 
-    return !!blog;
+    if (!blog) throw new NotFoundException('blog not found');
   }
 
   async getBlogByIdOrNotFoundError(blogId: BlogId): Promise<BlogViewDto> {

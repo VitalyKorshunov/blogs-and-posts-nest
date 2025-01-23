@@ -10,13 +10,11 @@ export class BlogsRepository {
   constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
 
   async save(blog: BlogDocument): Promise<void> {
-    console.log(blog);
     await blog.save();
-    console.log(blog);
   }
 
   async getBlogByIdOrNotFoundError(blogId: BlogId): Promise<BlogDocument> {
-    const blog = await this.BlogModel.findOne({
+    const blog: BlogDocument | null = await this.BlogModel.findOne({
       _id: new ObjectId(blogId),
       deletionStatus: DeletionStatus.NotDeleted,
     });

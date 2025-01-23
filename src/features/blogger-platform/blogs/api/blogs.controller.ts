@@ -15,18 +15,18 @@ import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import {
   CreateBlogInputDTO,
   UpdateBlogInputDTO,
-} from './input-dto/blog.input-dto';
+} from './input-dto/blogs.input-dto';
 import { BlogId } from '../dto/blog.dto';
-import { BlogViewDto } from './view-dto/blog-view.dto';
+import { BlogViewDto } from './view-dto/blogs.view-dto';
 import { GetBlogsQueryParamsInputDto } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { PostsQueryRepository } from '../../posts/infrastructure/posts.query-repository';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
-import { PostViewDto } from '../../posts/api/view-dto/post.view-dto';
+import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import {
   CreatePostForBlogInputDTO,
   CreatePostInputDTO,
-} from '../../posts/api/input-dto/post.input-dto';
+} from '../../posts/api/input-dto/posts.input-dto';
 import { PostsService } from '../../posts/application/posts.service';
 
 @Controller('blogs')
@@ -46,6 +46,7 @@ export class BlogsControllers {
   }
 
   @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Body() body: UpdateBlogInputDTO,
     @Param('id') id: BlogId,
@@ -93,6 +94,7 @@ export class BlogsControllers {
     @Param('id') id: BlogId,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(id);
     return await this.postsQueryRepository.getAllPostsForBlog(query, id);
   }
 }

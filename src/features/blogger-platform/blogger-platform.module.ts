@@ -10,15 +10,27 @@ import { PostsQueryRepository } from './posts/infrastructure/posts.query-reposit
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { Post, PostSchema } from './posts/domain/post.entity';
+import { Comment, CommentSchema } from './comments/domain/comment.entity';
+import { Like, LikeSchema } from './likes/domain/like.entity';
+import { CommentsController } from './comments/api/comments.controller';
+import { CommentsService } from './comments/application/comments.service';
+import { CommentsRepository } from './comments/infrastructure/comments.repository';
+import { CommentsQueryRepository } from './comments/infrastructure/comments.query-repository';
+import { LikesRepository } from './likes/infrastucture/likes.repository';
+import { User, UserSchema } from '../user-accounts/domain/user.entity';
+import { UsersRepository } from '../user-accounts/infrastructure/users.repository';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
+      { name: Comment.name, schema: CommentSchema },
+      { name: Like.name, schema: LikeSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
-  controllers: [BlogsControllers, PostsControllers],
+  controllers: [BlogsControllers, PostsControllers, CommentsController],
   providers: [
     BlogsService,
     BlogsRepository,
@@ -26,6 +38,11 @@ import { Post, PostSchema } from './posts/domain/post.entity';
     PostsService,
     PostsRepository,
     PostsQueryRepository,
+    CommentsService,
+    CommentsRepository,
+    CommentsQueryRepository,
+    LikesRepository,
+    UsersRepository,
   ],
   exports: [MongooseModule],
 })

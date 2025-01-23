@@ -1,10 +1,10 @@
-export class CreateBlogDTO {
+export interface CreateBlogDTO {
   name: string;
   description: string;
   websiteUrl: string;
 }
 
-export class UpdateBlogDTO {
+export interface UpdateBlogDTO {
   name: string;
   description: string;
   websiteUrl: string;

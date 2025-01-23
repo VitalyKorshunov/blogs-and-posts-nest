@@ -5,7 +5,7 @@ import { Blog, BlogDocument, BlogModelType } from '../domain/blog.entity';
 import {
   CreateBlogInputDTO,
   UpdateBlogInputDTO,
-} from '../api/input-dto/blog.input-dto';
+} from '../api/input-dto/blogs.input-dto';
 import { BlogId } from '../dto/blog.dto';
 
 @Injectable()

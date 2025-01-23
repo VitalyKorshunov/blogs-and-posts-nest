@@ -21,7 +21,14 @@ export class Blog {
   @Prop({ type: Date })
   createdAt: Date;
 
-  @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
+  @Prop({ type: Date })
+  updatedAt: Date;
+
+  @Prop({
+    enum: DeletionStatus,
+    type: String,
+    default: DeletionStatus.NotDeleted,
+  })
   deletionStatus: DeletionStatus;
 
   @Prop({ type: Date, default: null })
