@@ -2,11 +2,11 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   PostLikesAndDislikesCount,
   PostLikesAndDislikesCountSchema,
-} from './post-likes-and-dislikes-count.schema';
+} from './post.likes-and-dislikes-count.schema';
 import {
   PostNewestUserLikes,
   PostNewestUserLikesSchema,
-} from './post-newest-user-likes.schema';
+} from './post.newest-user-likes.schema';
 
 @Schema({ _id: false })
 export class PostLikesInfo {

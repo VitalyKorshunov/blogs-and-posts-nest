@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Like, LikeDocument, LikeModelType } from '../domain/likes.entity';
+import { Like, LikeDocument, LikeModelType } from '../domain/like.entity';
 import { ObjectId } from 'mongodb';
 import { LikeStatus } from '../../../../core/dto/like-status';
 import { InjectModel } from '@nestjs/mongoose';

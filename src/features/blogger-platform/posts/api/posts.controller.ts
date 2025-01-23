@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { PostsService } from '../application/posts.service';
@@ -14,19 +15,21 @@ import { PostsQueryRepository } from '../infrastructure/posts.query-repository';
 import {
   CreatePostInputDTO,
   UpdatePostInputDTO,
-} from './input-dto/post.input-dto';
-import { PostViewDto } from './view-dto/post.view-dto';
+} from './input-dto/posts.input-dto';
+import { PostViewDto } from './view-dto/posts.view-dto';
 import { PostId } from '../dto/post.dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
+import { CommentsService } from '../../comments/application/comments.service';
+import { CommentsQueryRepository } from '../../comments/infrastructure/comments.query-repository';
 
 @Controller('posts')
 export class PostsControllers {
   constructor(
     private postsService: PostsService,
     private postsQueryRepository: PostsQueryRepository,
-    // private commentsService: CommentsService,
-    // private commentsQueryRepository: CommentsQueryRepository,
+    private commentsService: CommentsService,
+    private commentsQueryRepository: CommentsQueryRepository,
   ) {}
 
   @Post()
@@ -54,7 +57,8 @@ export class PostsControllers {
     return await this.postsQueryRepository.getAllPosts(query);
   }
 
-  @Post(':id')
+  @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
     @Param('id') id: PostId,
     @Body() body: UpdatePostInputDTO,

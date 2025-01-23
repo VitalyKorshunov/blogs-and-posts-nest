@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { CreateLikeDTO, UpdateLikeDTO } from '../dto/like.dto';
+import { CreateLikeDTO } from '../dto/like.dto';
 import { LikeStatus } from '../../../../core/dto/like-status';
 import { ObjectId } from 'mongodb';
 
@@ -34,8 +34,8 @@ export class Like {
     return like as LikeDocument;
   }
 
-  updateLike(dto: UpdateLikeDTO): void {
-    this.likeStatus = dto.likeStatus;
+  updateLike(likeStatus: LikeStatus): void {
+    this.likeStatus = likeStatus;
   }
 }
 

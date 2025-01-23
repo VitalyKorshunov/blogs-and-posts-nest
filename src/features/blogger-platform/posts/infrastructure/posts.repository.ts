@@ -3,12 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument, PostModelType } from '../domain/post.entity';
 import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
 import { PostId } from '../dto/post.dto';
-import { BlogId } from '../../blogs/dto/blog.dto';
-import {
-  Blog,
-  BlogDocument,
-  BlogModelType,
-} from '../../blogs/domain/blog.entity';
+import { Blog, BlogModelType } from '../../blogs/domain/blog.entity';
 import { ObjectId } from 'mongodb';
 
 @Injectable()
@@ -20,7 +15,7 @@ export class PostsRepository {
 
   async getPostByIdOrNotFoundError(postId: PostId): Promise<PostDocument> {
     const post = await this.PostModel.findOne({
-      _id: postId,
+      _id: new ObjectId(postId),
       deletionStatus: DeletionStatus.NotDeleted,
     });
 
@@ -29,18 +24,16 @@ export class PostsRepository {
     return post;
   }
 
-  async save(post: PostDocument): Promise<void> {
-    await post.save();
-  }
-
-  async getBlogByIdOrNotFoundError(blogId: BlogId): Promise<BlogDocument> {
-    const blog = await this.BlogModel.findOne({
-      _id: new ObjectId(blogId),
+  async checkPostFoundOrNotFoundError(postId: PostId): Promise<void> {
+    const isPostFound = await this.PostModel.countDocuments({
+      _id: new ObjectId(postId),
       deletionStatus: DeletionStatus.NotDeleted,
     });
 
-    if (!blog) throw new NotFoundException('blog not found');
+    if (!isPostFound) throw new NotFoundException('post not found');
+  }
 
-    return blog;
+  async save(post: PostDocument): Promise<void> {
+    await post.save();
   }
 }

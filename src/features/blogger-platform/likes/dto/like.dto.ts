@@ -7,10 +7,6 @@ export interface CreateLikeDTO {
   login: string;
 }
 
-export interface UpdateLikeDTO {
-  likeStatus: LikeStatus;
-}
-
 export interface LikesAndDislikesCount {
   likesCount: number;
   dislikesCount: number;

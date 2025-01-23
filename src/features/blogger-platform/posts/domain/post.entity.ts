@@ -1,9 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
-import { CreatePostDTO, UpdatePostDTO } from '../dto/post.dto';
+import {
+  CreatePostDTO,
+  UpdatePostDTO,
+  UpdatePostLikesInfoDTO,
+} from '../dto/post.dto';
 import { ObjectId } from 'mongodb';
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { PostLikesInfo, PostLikesInfoSchema } from './post.likes-info.schema';
+import { LAST_NEWEST_LIKES_COUNT_FOR_POST } from '../../../../main';
 
 @Schema({ timestamps: true })
 export class Post {
@@ -25,11 +34,21 @@ export class Post {
   @Prop({ type: Date })
   createdAt: Date;
 
-  @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
+  @Prop({ type: Date })
+  updatedAt: Date;
+
+  @Prop({
+    enum: DeletionStatus,
+    type: String,
+    default: DeletionStatus.NotDeleted,
+  })
   deletionStatus: DeletionStatus;
 
   @Prop({ type: Date, default: null })
   deletedAt: Date | null;
+
+  @Prop({ type: PostLikesInfoSchema })
+  likesInfo: PostLikesInfo;
 
   static createPost(dto: CreatePostDTO): PostDocument {
     const post = new this();
@@ -40,6 +59,14 @@ export class Post {
     post.blogId = new ObjectId(dto.blogId);
     post.blogName = dto.blogName;
 
+    post.likesInfo = {
+      likesAndDislikesCount: {
+        likesCount: 0,
+        dislikesCount: 0,
+      },
+      newestUserLikes: [],
+    };
+
     return post as PostDocument;
   }
 
@@ -49,6 +76,25 @@ export class Post {
     this.shortDescription = dto.shortDescription;
     this.blogId = new ObjectId(dto.blogId);
     this.blogName = dto.blogName;
+  }
+
+  updateLikesInfo(dto: UpdatePostLikesInfoDTO): void {
+    if (dto.likesCount < 0 || dto.dislikesCount < 0) {
+      throw new InternalServerErrorException(
+        `'likesCount' and 'dislikesCount' must be greater than or equal 0`,
+      );
+    }
+    if (dto.lastNewestLikes.length > LAST_NEWEST_LIKES_COUNT_FOR_POST) {
+      throw new InternalServerErrorException(
+        `the length of the array should not be more than ${LAST_NEWEST_LIKES_COUNT_FOR_POST}`,
+      );
+    }
+
+    this.likesInfo.likesAndDislikesCount = {
+      likesCount: dto.likesCount,
+      dislikesCount: dto.dislikesCount,
+    };
+    this.likesInfo.newestUserLikes = dto.lastNewestLikes;
   }
 
   permanentDelete() {
