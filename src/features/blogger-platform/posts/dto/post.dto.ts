@@ -14,13 +14,13 @@ export class UpdatePostDTO {
   blogName: string;
 }
 
-export interface UpdatePostLikesInfoDTO {
+export class UpdatePostLikesInfoDTO {
   dislikesCount: number;
   likesCount: number;
   lastNewestLikes: PostLastNewestLikes[];
 }
 
-export interface PostLastNewestLikes {
+export class PostLastNewestLikes {
   addedAt: string;
   login: string;
   userId: string;

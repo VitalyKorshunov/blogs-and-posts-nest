@@ -1,19 +1,19 @@
 import { LikeStatus } from '../../../../core/dto/like-status';
 
-export interface CreateLikeDTO {
-  commentOrPostId: string;
-  likeStatus: LikeStatus;
-  userId: string;
-  login: string;
+export class CreateLikeDTO {
+  readonly commentOrPostId: string;
+  readonly likeStatus: LikeStatus;
+  readonly userId: string;
+  readonly login: string;
 }
 
-export interface LikesAndDislikesCount {
-  likesCount: number;
-  dislikesCount: number;
+export class LikesAndDislikesCount {
+  readonly likesCount: number;
+  readonly dislikesCount: number;
 }
 
-export interface LastNewestLikes {
-  addedAt: string;
-  login: string;
-  userId: string;
+export class LastNewestLikes {
+  readonly addedAt: string;
+  readonly login: string;
+  readonly userId: string;
 }

@@ -1,23 +1,23 @@
 import { LikeStatus } from '../../../../../core/dto/like-status';
 
-export interface CreateCommentInputDTO {
+export class CreateCommentInputDTO {
   postId: string;
   userId: string;
   content: string;
 }
 
-export interface DeleteCommentInputDTO {
+export class DeleteCommentInputDTO {
   userId: string;
   commentId: string;
 }
 
-export interface UpdateCommentInputDTO {
+export class UpdateCommentInputDTO {
   userId: string;
   commentId: string;
   content: string;
 }
 
-export interface UpdateCommentLikeStatusInputDTO {
+export class UpdateCommentLikeStatusInputDTO {
   commentId: string;
   userId: string;
   likeStatus: LikeStatus;
