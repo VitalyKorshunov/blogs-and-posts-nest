@@ -1,11 +1,11 @@
 export class CreateUserDTO {
   login: string;
   email: string;
-  password: string;
+  passwordHash: string;
 }
 
-export class RecoveryPassUserDTO {
-  passRecoveryCode: string;
+export class RecoveryPasswordUserDTO {
+  recoveryCode: string;
   newPassHash: string;
 }
 

@@ -1,5 +1,4 @@
 import { add } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   RecoveryPassword,
@@ -9,19 +8,34 @@ import {
   EmailConfirmation,
   EmailConfirmationSchema,
 } from './email-confirmation.schema';
-import { CreateUserDTO, RecoveryPassUserDTO } from '../dto/user.dto';
+import { CreateUserDTO, RecoveryPasswordUserDTO } from '../dto/user.dto';
 import { HydratedDocument, Model } from 'mongoose';
 import { DeletionStatus } from '../../../core/dto/deletion-statuses';
 import { BadRequestException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+
+export const loginConstraints = {
+  minLength: 3,
+  maxLength: 10,
+  match: /^[a-zA-Z0-9_-]*$/,
+};
+
+export const passwordConstraints = {
+  minLength: 6,
+  maxLength: 20,
+};
+
+export const emailConstraints = {
+  match: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+};
 
 @Schema({ timestamps: true })
 export class User {
   @Prop({
     type: String,
     required: true,
-    minlength: 3,
-    maxlength: 10,
     unique: true,
+    ...loginConstraints,
   })
   login: string;
 
@@ -53,10 +67,10 @@ export class User {
     const user = new this();
     user.login = dto.login;
     user.email = dto.email;
-    user.passHash = dto.password;
+    user.passHash = dto.passwordHash;
     user.emailConfirmation = {
       expirationDate: add(new Date(), { minutes: 10 }),
-      confirmationCode: uuidv4(),
+      confirmationCode: randomUUID(),
       isConfirmed: false,
     };
     return user as UserDocument;
@@ -88,7 +102,7 @@ export class User {
     this.emailConfirmation.expirationDate = add(new Date(), {
       minutes: 10,
     });
-    this.emailConfirmation.confirmationCode = uuidv4();
+    this.emailConfirmation.confirmationCode = randomUUID();
   }
 
   getEmailConfirmationCode(): string {
@@ -99,19 +113,19 @@ export class User {
     return this.recoveryPassword.expirationDate < new Date();
   }
 
-  changePassRecoveryCode() {
+  changePassRecoveryCode(): void {
     this.recoveryPassword.expirationDate = add(new Date(), { minutes: 5 });
-    this.recoveryPassword.recoveryCode = uuidv4();
+    this.recoveryPassword.recoveryCode = randomUUID();
   }
 
   getPassRecoveryCode(): string {
     return this.recoveryPassword.recoveryCode;
   }
 
-  changePassHash(dto: RecoveryPassUserDTO): void {
+  changePasswordAfterRecovery(dto: RecoveryPasswordUserDTO): void {
     if (this.isPassRecoveryCodeExpired())
       throw new Error('recovery code is expired');
-    if (this.recoveryPassword.recoveryCode !== dto.passRecoveryCode)
+    if (this.recoveryPassword.recoveryCode !== dto.recoveryCode)
       throw new Error('invalid password recovery code');
 
     this.passHash = dto.newPassHash;
@@ -130,8 +144,8 @@ export class User {
     this.deletedAt = new Date();
   }
 
-  // getId(): string {
-  //   return this.id;
+  // getId(): UserId {
+  //   return this._id.toString();
   // }
 }
 
