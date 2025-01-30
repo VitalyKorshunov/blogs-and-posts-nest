@@ -1,6 +1,7 @@
 import { IsBoolean, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 import { configValidationUtility } from './config-validation.utility';
+import { Injectable } from '@nestjs/common';
 
 export enum Environment {
   DEVELOPMENT = 'development',
@@ -9,6 +10,7 @@ export enum Environment {
   TESTING = 'testing',
 }
 
+@Injectable()
 export class CoreConfig {
   @IsNumber(
     {},
