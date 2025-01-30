@@ -1,5 +1,8 @@
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { CoreConfig } from './core.config';
 
-@Global()
-@Module({})
+@Module({
+  providers: [CoreConfig],
+  exports: [CoreConfig],
+})
 export class CoreModule {}
