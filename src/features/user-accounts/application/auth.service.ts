@@ -1,72 +1,35 @@
 import { UsersRepository } from '../infrastructure/users.repository';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CryptoService } from './crypto.service';
-import { UserId } from '../dto/user.dto';
-import { LoginSuccessViewDTO } from '../api/view-dto/auth.view-dto';
-import { JwtService } from '@nestjs/jwt';
 import { UserContextDto } from '../guards/dto/user-context.dto';
-import {
-  ConfirmationCodeInputDTO,
-  CreateUserInputDTO,
-  EmailResendingInputDTO,
-  NewPasswordInputDTO,
-  PasswordRecoveryInputDTO,
-} from '../api/input-dto/users.input-dto';
-import { User, UserDocument, UserModelType } from '../domain/user.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { EmailService } from './email-service/email.service';
+import { UserDocument } from '../domain/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private UserModel: UserModelType,
-    // private authRepository: AuthRepository,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
-    private jwtService: JwtService,
-    private emailService: EmailService,
   ) {}
 
-  // private async findUserByLoginOrEmail(loginOrEmail: string): Promise<HydratedUserType | null> {
-  //   const field = loginOrEmail.includes('@') ? 'email' : 'login'
-  //
-  //   return this.usersRepository.findUserByFieldAndValue(field, loginOrEmail)
-  // }
-  //
+  async validateUser(
+    loginOrEmail: string,
+    password: string,
+  ): Promise<UserContextDto> {
+    const user: UserDocument | null =
+      await this.usersRepository.findUserByLoginOrEmail(loginOrEmail);
 
-  private async validateLogin(login: string): Promise<void> {
-    if (login.includes('@')) throw new Error('Incorrect login');
+    if (!user) throw new UnauthorizedException();
 
-    const isLoginExist: boolean =
-      await this.usersRepository.isUserFoundByEmailOrLogin(login);
+    const isUserValid = await this.cryptoService.compareHash(
+      password,
+      user.passHash,
+    );
 
-    if (isLoginExist) {
-      throw new BadRequestException([
-        {
-          field: 'login',
-          message: 'login should be unique',
-        },
-      ]);
-    }
+    if (!isUserValid) throw new UnauthorizedException();
+
+    return { userId: user.id };
   }
 
-  private async validateEmail(email: string): Promise<void> {
-    if (!email.includes('@')) throw new Error('Incorrect email');
-
-    const isEmailExist: boolean =
-      await this.usersRepository.isUserFoundByEmailOrLogin(email);
-
-    if (isEmailExist) {
-      throw new BadRequestException([
-        {
-          field: 'email',
-          message: 'email should be unique',
-        },
-      ]);
-    }
-  }
-
-  //
   // private async createAccessAndRefreshTokens(userId: UserId, deviceId: DeviceId): Promise<AuthTokensType | null> {
   //   const newAccessToken: string | null = await jwtService.createAccessToken(userId)
   //   const newRefreshToken: string | null = await jwtService.createRefreshToken(userId, deviceId)
@@ -81,13 +44,6 @@ export class AuthService {
   //   }
   // }
   //
-  async loginUser(userId: UserId): Promise<LoginSuccessViewDTO> {
-    const accessToken: string = this.jwtService.sign({
-      userId,
-    } as UserContextDto);
-
-    return { accessToken: accessToken };
-  }
 
   //
   // async logoutUser(refreshToken: string): Promise<ResultType<null>> {
@@ -106,82 +62,6 @@ export class AuthService {
   //
   //   return result.success(null)
   // }
-
-  async registrationUser(dto: CreateUserInputDTO): Promise<UserId> {
-    await this.validateLogin(dto.login);
-    await this.validateEmail(dto.email);
-
-    const passHash = await this.cryptoService.generateHash(dto.password);
-
-    const user: UserDocument = this.UserModel.createUser({
-      login: dto.login,
-      email: dto.email,
-      passwordHash: passHash,
-    });
-
-    await this.usersRepository.save(user);
-
-    this.emailService.registration(dto.email, user.getEmailConfirmationCode());
-
-    return user.id;
-  }
-
-  async registrationConfirmationEmail(
-    dto: ConfirmationCodeInputDTO,
-  ): Promise<void> {
-    const user: UserDocument | null =
-      await this.usersRepository.findUserByEmailConfirmationCode(dto.code);
-
-    if (!user)
-      throw new BadRequestException([
-        {
-          message: 'Incorrect code',
-          field: 'code',
-        },
-      ]);
-
-    if (!user.canBeConfirmed())
-      throw new BadRequestException([
-        {
-          message: 'Confirmation code is expired or already been applied',
-          field: 'code',
-        },
-      ]);
-
-    user.confirmEmail(dto.code);
-
-    await this.usersRepository.save(user);
-  }
-
-  async resendRegistrationEmail(dto: EmailResendingInputDTO): Promise<void> {
-    const user: UserDocument | null =
-      await this.usersRepository.findUserByLoginOrEmail(dto.email);
-
-    if (!user) {
-      throw new BadRequestException([
-        {
-          field: 'email',
-          message: 'email not found',
-        },
-      ]);
-    }
-
-    if (!user.canBeConfirmed()) {
-      throw new BadRequestException([
-        {
-          field: 'email',
-          message: 'email already confirmed or expired',
-        },
-      ]);
-    }
-
-    user.changeEmailConfirmationCode();
-    await this.usersRepository.save(user);
-    this.emailService.registrationEmailResending(
-      user.email,
-      user.getEmailConfirmationCode(),
-    );
-  }
 
   // async updateTokens(refreshToken: string): Promise<ResultType<AuthTokensType>> {
   //   const oldRefreshTokenPayload: VerifyRefreshTokenViewModel | null = await jwtService.verifyRefreshToken(refreshToken)
@@ -236,49 +116,4 @@ export class AuthService {
   //
   //   return result.success(tokens)
   // }
-
-  async passwordRecovery(dto: PasswordRecoveryInputDTO): Promise<void> {
-    const user: UserDocument | null =
-      await this.usersRepository.findUserByLoginOrEmail(dto.email);
-
-    if (!user) {
-      return;
-    }
-
-    user.changePassRecoveryCode();
-
-    this.emailService.passwordRecovery(user.email, user.getPassRecoveryCode());
-  }
-
-  async newPassword(dto: NewPasswordInputDTO): Promise<void> {
-    const user: UserDocument | null =
-      await this.usersRepository.findUserByPasswordRecoveryCode(
-        dto.recoveryCode,
-      );
-
-    if (!user) {
-      throw new BadRequestException({
-        field: 'recoveryCode',
-        message: 'Recovery Code is invalid',
-      });
-    }
-
-    if (user.isPassRecoveryCodeExpired()) {
-      throw new BadRequestException({
-        field: 'recoveryCode',
-        message: 'Recovery Code is expired',
-      });
-    }
-
-    const newPassHash: string = await this.cryptoService.generateHash(
-      dto.newPassword,
-    );
-
-    user.changePasswordAfterRecovery({
-      recoveryCode: dto.recoveryCode,
-      newPassHash: newPassHash,
-    });
-
-    await this.usersRepository.save(user);
-  }
 }

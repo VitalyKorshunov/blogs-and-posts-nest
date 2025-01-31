@@ -12,21 +12,23 @@ import {
 } from '@nestjs/common';
 import { ApiBasicAuth } from '@nestjs/swagger';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
-import { UsersService } from '../application/users.service';
 import { UserId } from '../dto/user.dto';
 import { UserViewDto } from './view-dto/users.view-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { CreateUserInputDTO } from './input-dto/users.input-dto';
-import { ValidationPipe } from '../../../core/pipe-example.pipe';
+import { ValidationObjectIdPipe } from '../../../core/pipe-example.pipe';
 import { BasicAuthGuard } from '../guards/basic.guard';
+import { CreateUserByAdminCommand } from '../application/use-cases/create-user-by-admin-use-case';
+import { CommandBus } from '@nestjs/cqrs';
+import { DeleteUserCommand } from '../application/use-cases/delete-user.use-case';
 
 @Controller('users')
 @ApiBasicAuth('basicAuth')
 export class UsersController {
   constructor(
-    private usersService: UsersService,
     private usersQueryRepository: UsersQueryRepository,
+    private commandBus: CommandBus,
   ) {}
 
   @Post()
@@ -34,8 +36,9 @@ export class UsersController {
   async createUser(
     @Body() createUserInputDTO: CreateUserInputDTO,
   ): Promise<UserViewDto> {
-    const userId: UserId =
-      await this.usersService.createUserByAdmin(createUserInputDTO);
+    const userId: UserId = await this.commandBus.execute(
+      new CreateUserByAdminCommand(createUserInputDTO),
+    );
 
     return await this.usersQueryRepository.getUserByIdOrNotFoundError(userId);
   }
@@ -43,8 +46,10 @@ export class UsersController {
   @Delete(':userId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(BasicAuthGuard)
-  async deleteUser(@Param('userId', new ValidationPipe()) userId: UserId) {
-    return await this.usersService.deleteUser(userId);
+  async deleteUser(
+    @Param('userId', new ValidationObjectIdPipe()) userId: UserId,
+  ): Promise<void> {
+    await this.commandBus.execute(new DeleteUserCommand(userId));
   }
 
   @Get()
