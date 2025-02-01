@@ -10,7 +10,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { BlogsService } from '../application/blogs.service';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import {
   CreateBlogInputDTO,
@@ -27,39 +26,44 @@ import {
   CreatePostForBlogInputDTO,
   CreatePostInputDTO,
 } from '../../posts/api/input-dto/posts.input-dto';
-import { PostsService } from '../../posts/application/posts.service';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreateBlogCommand } from '../application/use-cases/create-blog.use-case';
+import { UpdateBlogCommand } from '../application/use-cases/update-blog.use-case';
+import { DeleteBlogCommand } from '../application/use-cases/delete-blog.use-case';
+import { CreatePostCommand } from '../../posts/application/use-cases/create-post.use-case';
 
 @Controller('blogs')
 export class BlogsControllers {
   constructor(
-    private blogsService: BlogsService,
     private blogsQueryRepository: BlogsQueryRepository,
-    private postsService: PostsService,
     private postsQueryRepository: PostsQueryRepository,
+    private commandBus: CommandBus,
   ) {}
 
   @Post()
-  async createBlog(@Body() body: CreateBlogInputDTO): Promise<BlogViewDto> {
-    const blogId: BlogId = await this.blogsService.createBlog(body);
+  async createBlog(@Body() dto: CreateBlogInputDTO): Promise<BlogViewDto> {
+    const blogId: BlogId = await this.commandBus.execute(
+      new CreateBlogCommand(dto),
+    );
 
     return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
-  @Put(':id')
+  @Put(':blogId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
-    @Body() body: UpdateBlogInputDTO,
-    @Param('id') id: BlogId,
+    @Body() dto: UpdateBlogInputDTO,
+    @Param('blogId') blogId: BlogId,
   ): Promise<BlogViewDto> {
-    await this.blogsService.updateBlog(body, id);
+    await this.commandBus.execute(new UpdateBlogCommand(dto, blogId));
 
-    return this.blogsQueryRepository.getBlogByIdOrNotFoundError(id);
+    return this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
-  @Delete(':id')
+  @Delete(':blogId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBlog(@Param('id') id: BlogId): Promise<void> {
-    await this.blogsService.deleteBlog(id);
+  async deleteBlog(@Param('blogId') blogId: BlogId): Promise<void> {
+    await this.commandBus.execute(new DeleteBlogCommand(blogId));
   }
 
   @Get(':id')
@@ -74,27 +78,26 @@ export class BlogsControllers {
     return await this.blogsQueryRepository.getAllBlogs(query);
   }
 
-  @Post(':id/posts')
+  @Post(':blogId/posts')
   async createPostInBlog(
-    @Param('id') id: BlogId,
+    @Param('blogId') blogId: BlogId,
     @Body() body: CreatePostForBlogInputDTO,
   ): Promise<PostViewDto> {
-    //TODO review from BLOG controller to POST SERVICE
     const dto: CreatePostInputDTO = {
       ...body,
-      blogId: id,
+      blogId: blogId,
     };
-    const postId = await this.postsService.createPost(dto);
+    const postId = await this.commandBus.execute(new CreatePostCommand(dto));
 
     return this.postsQueryRepository.getPostByIdOrNotFoundError(postId);
   }
 
-  @Get(':id/posts')
+  @Get(':blogId/posts')
   async getAllPostsForBlog(
-    @Param('id') id: BlogId,
+    @Param('blogId') blogId: BlogId,
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(id);
-    return await this.postsQueryRepository.getAllPostsForBlog(query, id);
+    await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(blogId);
+    return await this.postsQueryRepository.getAllPostsForBlog(query, blogId);
   }
 }
