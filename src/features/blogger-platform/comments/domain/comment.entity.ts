@@ -17,12 +17,18 @@ import {
 import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
 import {
   BadRequestException,
+  ForbiddenException,
   InternalServerErrorException,
 } from '@nestjs/common';
 
+export const commentContentConstraints = {
+  minLength: 20,
+  maxLength: 300,
+};
+
 @Schema({ timestamps: true })
 export class Comment {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...commentContentConstraints })
   content: string;
 
   @Prop({ type: Types.ObjectId, required: true })
@@ -92,7 +98,7 @@ export class Comment {
 
   validateUserOwnershipOrThrow(userId: string): void {
     if (userId !== this.commentatorInfo.userId.toString()) {
-      throw new Error('comment does not belong to user'); //TODO: заменить кастомным исключением
+      throw new ForbiddenException('comment does not belong to user'); //TODO: заменить кастомным исключением
     }
   }
 }

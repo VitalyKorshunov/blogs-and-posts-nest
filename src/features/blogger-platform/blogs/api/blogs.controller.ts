@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import {
@@ -31,6 +32,9 @@ import { CreateBlogCommand } from '../application/use-cases/create-blog.use-case
 import { UpdateBlogCommand } from '../application/use-cases/update-blog.use-case';
 import { DeleteBlogCommand } from '../application/use-cases/delete-blog.use-case';
 import { CreatePostCommand } from '../../posts/application/use-cases/create-post.use-case';
+import { ApiBasicAuth } from '@nestjs/swagger';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic.guard';
+import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
 
 @Controller('blogs')
 export class BlogsControllers {
@@ -40,7 +44,17 @@ export class BlogsControllers {
     private commandBus: CommandBus,
   ) {}
 
+  @Get()
+  async getAllBlogs(
+    @Query() query: GetBlogsQueryParamsInputDto,
+  ): Promise<PaginatedViewDto<BlogViewDto[]>> {
+    return await this.blogsQueryRepository.getAllBlogs(query);
+  }
+
   @Post()
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
+  //TODO: хорошая ли практика сделать отдельный декоратор, который объединяет @UseGuards(LocalAuthGuard) и @ApiBasicAuth()?
   async createBlog(@Body() dto: CreateBlogInputDTO): Promise<BlogViewDto> {
     const blogId: BlogId = await this.commandBus.execute(
       new CreateBlogCommand(dto),
@@ -49,38 +63,20 @@ export class BlogsControllers {
     return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
-  @Put(':blogId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async updateBlog(
-    @Body() dto: UpdateBlogInputDTO,
-    @Param('blogId') blogId: BlogId,
-  ): Promise<BlogViewDto> {
-    await this.commandBus.execute(new UpdateBlogCommand(dto, blogId));
-
-    return this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
-  }
-
-  @Delete(':blogId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBlog(@Param('blogId') blogId: BlogId): Promise<void> {
-    await this.commandBus.execute(new DeleteBlogCommand(blogId));
-  }
-
-  @Get(':id')
-  async getBlog(@Param('id') id: BlogId): Promise<BlogViewDto> {
-    return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(id);
-  }
-
-  @Get()
-  async getAllBlogs(
-    @Query() query: GetBlogsQueryParamsInputDto,
-  ): Promise<PaginatedViewDto<BlogViewDto[]>> {
-    return await this.blogsQueryRepository.getAllBlogs(query);
+  @Get(':blogId/posts')
+  async getAllPostsForBlog(
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
+    @Query() query: GetPostsQueryParams,
+  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(blogId);
+    return await this.postsQueryRepository.getAllPostsForBlog(query, blogId);
   }
 
   @Post(':blogId/posts')
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
   async createPostInBlog(
-    @Param('blogId') blogId: BlogId,
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
     @Body() body: CreatePostForBlogInputDTO,
   ): Promise<PostViewDto> {
     const dto: CreatePostInputDTO = {
@@ -92,12 +88,33 @@ export class BlogsControllers {
     return this.postsQueryRepository.getPostByIdOrNotFoundError(postId);
   }
 
-  @Get(':blogId/posts')
-  async getAllPostsForBlog(
-    @Param('blogId') blogId: BlogId,
-    @Query() query: GetPostsQueryParams,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(blogId);
-    return await this.postsQueryRepository.getAllPostsForBlog(query, blogId);
+  @Get(':blogId')
+  async getBlog(
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
+  ): Promise<BlogViewDto> {
+    return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
+  }
+
+  @Put(':blogId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
+  async updateBlog(
+    @Body() dto: UpdateBlogInputDTO,
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
+  ): Promise<BlogViewDto> {
+    await this.commandBus.execute(new UpdateBlogCommand(dto, blogId));
+
+    return this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
+  }
+
+  @Delete(':blogId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
+  async deleteBlog(
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
+  ): Promise<void> {
+    await this.commandBus.execute(new DeleteBlogCommand(blogId));
   }
 }

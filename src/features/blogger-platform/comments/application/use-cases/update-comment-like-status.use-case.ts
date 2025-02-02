@@ -1,5 +1,5 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdateCommentLikeStatusInputDTO } from '../../api/input-dto/comments.input-dto';
+import { UpdateCommentLikeStatusInputCommandDTO } from '../../api/input-dto/comments.input-dto';
 import { CommentDocument } from '../../domain/comment.entity';
 import { UserDocument } from '../../../../user-accounts/domain/user.entity';
 import {
@@ -17,7 +17,7 @@ import { UsersRepository } from '../../../../user-accounts/infrastructure/users.
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
 
 export class UpdateCommentLikeStatusCommand extends Command<void> {
-  constructor(public dto: UpdateCommentLikeStatusInputDTO) {
+  constructor(public dto: UpdateCommentLikeStatusInputCommandDTO) {
     super();
   }
 }

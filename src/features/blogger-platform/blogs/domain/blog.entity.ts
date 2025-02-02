@@ -4,15 +4,31 @@ import { CreateBlogDTO, UpdateBlogDTO } from '../dto/blog.dto';
 import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
 import { BadRequestException } from '@nestjs/common';
 
+export const blogNameConstraints = {
+  minLength: 1,
+  maxLength: 15,
+};
+
+export const blogDescriptionConstraints = {
+  minLength: 1,
+  maxLength: 500,
+};
+
+export const blogWebsiteUrlConstraints = {
+  minLength: 11,
+  maxLength: 100,
+  match: /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/,
+};
+
 @Schema({ timestamps: true })
 export class Blog {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...blogNameConstraints })
   name: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...blogDescriptionConstraints })
   description: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...blogWebsiteUrlConstraints })
   websiteUrl: string;
 
   @Prop({ type: Boolean, required: true, default: false })

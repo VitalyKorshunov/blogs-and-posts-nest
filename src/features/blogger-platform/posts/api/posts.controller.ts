@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsQueryRepository } from '../infrastructure/posts.query-repository';
 import {
@@ -24,6 +25,9 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreatePostCommand } from '../application/use-cases/create-post.use-case';
 import { DeletePostCommand } from '../application/use-cases/delete-post.use-case';
 import { UpdatePostCommand } from '../application/use-cases/update-post.use-case';
+import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic.guard';
+import { ApiBasicAuth } from '@nestjs/swagger';
 
 @Controller('posts')
 export class PostsControllers {
@@ -34,6 +38,8 @@ export class PostsControllers {
   ) {}
 
   @Post()
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
   async createPost(@Body() dto: CreatePostInputDTO): Promise<PostViewDto> {
     const postId: PostId = await this.commandBus.execute(
       new CreatePostCommand(dto),
@@ -44,12 +50,18 @@ export class PostsControllers {
 
   @Delete(':postId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(@Param('postId') postId: PostId): Promise<void> {
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
+  async deletePost(
+    @Param('postId', ObjectIdValidationPipe) postId: PostId,
+  ): Promise<void> {
     await this.commandBus.execute(new DeletePostCommand(postId));
   }
 
   @Get(':postId')
-  async getPost(@Param('postId') postId: PostId): Promise<PostViewDto> {
+  async getPost(
+    @Param('postId', ObjectIdValidationPipe) postId: PostId,
+  ): Promise<PostViewDto> {
     return await this.postsQueryRepository.getPostByIdOrNotFoundError(postId);
   }
 
@@ -62,8 +74,10 @@ export class PostsControllers {
 
   @Put(':postId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BasicAuthGuard)
+  @ApiBasicAuth()
   async updatePost(
-    @Param('postId') postId: PostId,
+    @Param('postId', ObjectIdValidationPipe) postId: PostId,
     @Body() dto: UpdatePostInputDTO,
   ): Promise<PostViewDto> {
     await this.commandBus.execute(new UpdatePostCommand(dto, postId));
