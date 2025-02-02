@@ -1,7 +1,7 @@
 import { UsersRepository } from '../infrastructure/users.repository';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CryptoService } from './crypto.service';
-import { UserContextDto } from '../guards/dto/user-context.dto';
+import { UserContextDTO } from '../guards/dto/user-context.dto';
 import { UserDocument } from '../domain/user.entity';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class AuthService {
   async validateUser(
     loginOrEmail: string,
     password: string,
-  ): Promise<UserContextDto> {
+  ): Promise<UserContextDTO> {
     const user: UserDocument | null =
       await this.usersRepository.findUserByLoginOrEmail(loginOrEmail);
 

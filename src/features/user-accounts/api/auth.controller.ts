@@ -5,17 +5,18 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
 import { UsersService } from '../application/users.service';
 import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
 import { ExtractUserFromRequest } from '../guards/decorators/extract-user-from-request.decorator';
-import { UserContextDto } from '../guards/dto/user-context.dto';
+import { UserContextDTO } from '../guards/dto/user-context.dto';
 import { MeViewDto } from './view-dto/users.view-dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { LocalAuthGuard } from '../guards/local-auth.guard';
-import { LoginSuccessViewDTO } from './view-dto/auth.view-dto';
+import { JwtAuthGuard } from '../guards/bearer/jwt-auth.guard';
+import { LocalAuthGuard } from '../guards/local/local-auth.guard';
+import { LoginSuccessDTO, LoginSuccessViewDTO } from './view-dto/auth.view-dto';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import {
   ChangeUserPasswordInputDTO,
@@ -32,6 +33,7 @@ import { ConfirmUserEmailCommand } from '../application/use-cases/confirm-user-e
 import { ResendUserConfirmationEmailCommand } from '../application/use-cases/resend-user-confirmation-email.use-case';
 import { SendUserRecoveryPasswordCommand } from '../application/use-cases/send-user-recovery-password.use-case';
 import { ChangeUserPasswordCommand } from '../application/use-cases/change-user-password.use-case';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthControllers {
@@ -56,9 +58,19 @@ export class AuthControllers {
     },
   })
   async loginUser(
-    @ExtractUserFromRequest() user: UserContextDto,
+    @ExtractUserFromRequest() user: UserContextDTO,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<LoginSuccessViewDTO> {
-    return await this.commandBus.execute(new LoginUserCommand(user.userId));
+    const tokens: LoginSuccessDTO = await this.commandBus.execute(
+      new LoginUserCommand(user.userId),
+    );
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      secure: true,
+      httpOnly: true,
+    });
+
+    return { accessToken: tokens.accessToken };
   }
 
   // async logoutUser(req: Request, res: Response) {
@@ -75,7 +87,7 @@ export class AuthControllers {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async getUserInfo(
-    @ExtractUserFromRequest() user: UserContextDto,
+    @ExtractUserFromRequest() user: UserContextDTO,
   ): Promise<MeViewDto> {
     return await this.authQueryRepository.getMeInfo(user.userId);
   }

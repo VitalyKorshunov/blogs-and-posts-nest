@@ -43,7 +43,7 @@ export class PasswordRecoveryInputDTO {
   email: string;
 }
 
-export class NewPasswordInputDTO {
+export class ChangeUserPasswordInputDTO {
   @IsString()
   @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
   newPassword: string;

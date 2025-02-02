@@ -1,3 +1,3 @@
-export class UserContextDto {
+export class UserContextDTO {
   userId: string;
 }

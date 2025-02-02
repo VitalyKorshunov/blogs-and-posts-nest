@@ -1,10 +1,15 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserId } from '../../dto/user.dto';
-import { LoginSuccessViewDTO } from '../../api/view-dto/auth.view-dto';
+import { LoginSuccessDTO } from '../../api/view-dto/auth.view-dto';
 import { JwtService } from '@nestjs/jwt';
-import { UserContextDto } from '../../guards/dto/user-context.dto';
+import { UserContextDTO } from '../../guards/dto/user-context.dto';
+import { Inject } from '@nestjs/common';
+import {
+  ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+  REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+} from '../../constants/auth-tokens.inject-constants';
 
-export class LoginUserCommand extends Command<LoginSuccessViewDTO> {
+export class LoginUserCommand extends Command<LoginSuccessDTO> {
   constructor(public userId: UserId) {
     super();
   }
@@ -12,13 +17,25 @@ export class LoginUserCommand extends Command<LoginSuccessViewDTO> {
 
 @CommandHandler(LoginUserCommand)
 export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    @Inject(ACCESS_TOKEN_STRATEGY_INJECT_TOKEN)
+    private accessTokenContext: JwtService,
+    @Inject(REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
+    private refreshTokenContext: JwtService,
+  ) {}
 
-  async execute({ userId }: LoginUserCommand): Promise<LoginSuccessViewDTO> {
-    const accessToken: string = this.jwtService.sign({
+  async execute({ userId }: LoginUserCommand): Promise<LoginSuccessDTO> {
+    const accessToken: string = this.accessTokenContext.sign({
       userId,
-    } as UserContextDto);
+    } as UserContextDTO);
+    const refreshToken: string = this.refreshTokenContext.sign({
+      userId,
+      deviceId: 'deviceId',
+    });
 
-    return { accessToken: accessToken };
+    return {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
   }
 }
