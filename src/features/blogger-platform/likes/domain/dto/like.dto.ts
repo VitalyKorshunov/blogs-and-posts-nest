@@ -1,4 +1,4 @@
-import { LikeStatus } from '../../../../core/dto/like-status';
+import { LikeStatus } from './like-status';
 
 export class CreateLikeDTO {
   readonly commentOrPostId: string;

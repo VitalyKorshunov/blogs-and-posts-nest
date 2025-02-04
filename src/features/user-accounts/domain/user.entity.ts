@@ -8,24 +8,25 @@ import {
   EmailConfirmation,
   EmailConfirmationSchema,
 } from './email-confirmation.schema';
-import { CreateUserDTO, RecoveryPasswordUserDTO } from '../dto/user.dto';
+import { CreateUserDTO, RecoveryPasswordUserDTO } from './dto/user.dto';
 import { HydratedDocument, Model } from 'mongoose';
-import { DeletionStatus } from '../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../core/dto/deletion-status';
 import { BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { SETTINGS } from '../../../settings';
 
-export const loginConstraints = {
+export const userLoginConstraints = {
   minLength: 3,
   maxLength: 10,
   match: /^[a-zA-Z0-9_-]*$/,
 };
 
-export const passwordConstraints = {
+export const userPasswordConstraints = {
   minLength: 6,
   maxLength: 20,
 };
 
-export const emailConstraints = {
+export const userEmailConstraints = {
   match: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
 };
 
@@ -35,17 +36,17 @@ export class User {
     type: String,
     required: true,
     unique: true,
-    ...loginConstraints,
+    ...userLoginConstraints,
   })
   login: string;
 
-  @Prop({ type: String, required: true, unique: true })
+  @Prop({ type: String, required: true, unique: true, ...userEmailConstraints })
   email: string;
 
   @Prop({ type: String, required: true })
   passHash: string;
 
-  @Prop({ type: RecoveryPasswordSchema })
+  @Prop({ type: RecoveryPasswordSchema, required: true })
   recoveryPassword: RecoveryPassword;
 
   @Prop({ type: EmailConfirmationSchema, required: true })
@@ -57,7 +58,7 @@ export class User {
   @Prop({ type: Date })
   updatedAt: Date;
 
-  @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
+  @Prop({ enum: DeletionStatus, required: true })
   deletionStatus: DeletionStatus;
 
   @Prop({ type: Date, default: null })
@@ -68,11 +69,20 @@ export class User {
     user.login = dto.login;
     user.email = dto.email;
     user.passHash = dto.passwordHash;
+    user.recoveryPassword = {
+      expirationDate: new Date(),
+      recoveryCode: randomUUID(),
+    };
     user.emailConfirmation = {
-      expirationDate: add(new Date(), { minutes: 10 }),
+      expirationDate: add(new Date(), {
+        hours: SETTINGS.USER.EMAIL_CONFIRMATION_CODE_EXPIRES_IN_HOURS,
+      }),
       confirmationCode: randomUUID(),
       isConfirmed: false,
     };
+    user.deletionStatus = DeletionStatus.NotDeleted;
+    user.deletedAt = null;
+
     return user as UserDocument;
   }
 
@@ -114,7 +124,9 @@ export class User {
   }
 
   changePassRecoveryCode(): void {
-    this.recoveryPassword.expirationDate = add(new Date(), { minutes: 5 });
+    this.recoveryPassword.expirationDate = add(new Date(), {
+      hours: SETTINGS.USER.PASSWORD_RECOVERY_CODE_EXPIRES_IN_HOURS,
+    });
     this.recoveryPassword.recoveryCode = randomUUID();
   }
 

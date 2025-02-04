@@ -9,25 +9,29 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { CommentsQueryRepository } from '../infrastructure/comments.query-repository';
-import { CommentId } from '../dto/comment.dto';
+import { CommentsQueryRepository } from '../infrastructure/query-repository/comments.query-repository';
+import { CommentId } from '../domain/dto/comment.dto';
 import { CommentViewDTO } from './view-dto/comments.view-dto';
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
 import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteCommentCommand } from '../application/use-cases/delete-comment.use-case';
 import {
-  DeleteCommentInputDTO,
-  UpdateCommentInputCommandDTO,
   UpdateCommentInputDTO,
-  UpdateCommentLikeStatusInputCommandDTO,
   UpdateCommentLikeStatusInputDTO,
 } from './input-dto/comments.input-dto';
-import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/extract-user-from-request.decorator';
-import { UserContextDTO } from '../../../user-accounts/guards/dto/user-context.dto';
+import {
+  ExtractUserFromRequest,
+  ExtractUserOptionalFromRequest,
+} from '../../../user-accounts/guards/decorators/extract-user-from-request.decorator';
+import {
+  UserContextDTO,
+  UserOptionalContextDTO,
+} from '../../../user-accounts/guards/dto/user-context.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UpdateCommentLikeStatusCommand } from '../application/use-cases/update-comment-like-status.use-case';
 import { UpdateCommentCommand } from '../application/use-cases/update-comment.use-case';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 
 @Controller('comments')
 export class CommentsController {
@@ -45,13 +49,13 @@ export class CommentsController {
     @Body() updateCommentLikeInputDTO: UpdateCommentLikeStatusInputDTO,
     @ExtractUserFromRequest() user: UserContextDTO,
   ): Promise<void> {
-    const dto: UpdateCommentLikeStatusInputCommandDTO = {
-      likeStatus: updateCommentLikeInputDTO.likeStatus,
-      commentId: commentId,
-      userId: user.userId,
-    };
-
-    await this.commandBus.execute(new UpdateCommentLikeStatusCommand(dto));
+    await this.commandBus.execute(
+      new UpdateCommentLikeStatusCommand({
+        likeStatus: updateCommentLikeInputDTO.likeStatus,
+        commentId: commentId,
+        userId: user.userId,
+      }),
+    );
   }
 
   @Put(':commentId')
@@ -63,12 +67,13 @@ export class CommentsController {
     @Body() updateCommentInputDTO: UpdateCommentInputDTO,
     @ExtractUserFromRequest() user: UserContextDTO,
   ): Promise<void> {
-    const dto: UpdateCommentInputCommandDTO = {
-      commentId: commentId,
-      content: updateCommentInputDTO.content,
-      userId: user.userId,
-    };
-    await this.commandBus.execute(new UpdateCommentCommand(dto));
+    await this.commandBus.execute(
+      new UpdateCommentCommand({
+        commentId: commentId,
+        content: updateCommentInputDTO.content,
+        userId: user.userId,
+      }),
+    );
   }
 
   @Delete(':commentId')
@@ -79,17 +84,23 @@ export class CommentsController {
     @Param('commentId', ObjectIdValidationPipe) commentId: CommentId,
     @ExtractUserFromRequest() user: UserContextDTO,
   ): Promise<void> {
-    const dto: DeleteCommentInputDTO = {
-      userId: user.userId,
-      commentId: commentId,
-    };
-    await this.commandBus.execute(new DeleteCommentCommand(dto));
+    await this.commandBus.execute(
+      new DeleteCommentCommand({
+        userId: user.userId,
+        commentId: commentId,
+      }),
+    );
   }
 
-  @Get(':commendId')
+  @Get(':commentId')
+  @UseGuards(JwtOptionalAuthGuard)
   getComment(
-    @Param('commendId', ObjectIdValidationPipe) commentId: CommentId,
+    @Param('commentId', ObjectIdValidationPipe) commentId: CommentId,
+    @ExtractUserOptionalFromRequest() user: UserOptionalContextDTO,
   ): Promise<CommentViewDTO> {
-    return this.commentQueryRepository.getCommentByIdOrNotFoundError(commentId);
+    return this.commentQueryRepository.getCommentByIdOrNotFoundError(
+      commentId,
+      user,
+    );
   }
 }

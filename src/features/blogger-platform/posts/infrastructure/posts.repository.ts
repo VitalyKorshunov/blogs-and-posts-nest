@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument, PostModelType } from '../domain/post.entity';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
-import { PostId } from '../dto/post.dto';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
+import { PostId } from '../domain/dto/post.dto';
 import { Blog, BlogModelType } from '../../blogs/domain/blog.entity';
 import { ObjectId } from 'mongodb';
 

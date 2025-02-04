@@ -1,20 +1,45 @@
-import { IsEmail, IsString, IsUUID, Length, Matches } from 'class-validator';
+import { IsString, IsUUID, Length, Matches } from 'class-validator';
 import {
-  loginConstraints,
-  passwordConstraints,
+  userEmailConstraints,
+  userLoginConstraints,
+  userPasswordConstraints,
 } from '../../domain/user.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { Trim } from '../../../../core/decorators/transform/trim';
 
-export class CreateUserInputDTO {
+class UserEmailDTO {
+  @ApiProperty({
+    example: 'email@example.com',
+    pattern: userEmailConstraints.match.source,
+  })
+  @Matches(userEmailConstraints.match.source)
+  @Trim()
   @IsString()
-  @Matches(`^[a-zA-Z0-9_-]*$`) //TODO: исправить на переменную loginConstraints.match
-  @Length(loginConstraints.minLength, loginConstraints.maxLength)
+  email: string;
+}
+
+export class CreateUserInputDTO extends UserEmailDTO {
+  @ApiProperty({
+    pattern: userLoginConstraints.match.source,
+    minLength: userLoginConstraints.minLength,
+    maxLength: userLoginConstraints.maxLength,
+  })
+  @Length(userLoginConstraints.minLength, userLoginConstraints.maxLength)
+  @Matches(userLoginConstraints.match)
+  @Trim()
   login: string;
 
-  @IsEmail()
+  @ApiProperty({
+    example: 'email@example.com',
+    pattern: userEmailConstraints.match.source,
+  })
+  @Matches(userEmailConstraints.match.source)
+  @Trim()
+  @IsString()
   email: string;
 
   @IsString()
-  @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
+  @Length(userPasswordConstraints.minLength, userPasswordConstraints.maxLength)
   password: string;
 }
 
@@ -22,8 +47,8 @@ export class LoginInputDTO {
   @IsString()
   loginOrEmail: string;
 
+  @Length(userPasswordConstraints.minLength, userPasswordConstraints.maxLength)
   @IsString()
-  @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
   password: string;
 }
 
@@ -34,21 +59,35 @@ export class ConfirmationCodeInputDTO {
 }
 
 export class EmailResendingInputDTO {
-  @IsEmail()
+  @ApiProperty({
+    example: 'email@example.com',
+    pattern: userEmailConstraints.match.source,
+  })
+  @Matches(userEmailConstraints.match.source)
+  @Trim()
+  @IsString()
   email: string;
 }
 
 export class PasswordRecoveryInputDTO {
-  @IsEmail()
+  @ApiProperty({
+    example: 'email@example.com',
+    pattern: userEmailConstraints.match.source,
+  })
+  @Matches(userEmailConstraints.match.source)
+  @Trim()
+  @IsString()
   email: string;
 }
 
 export class ChangeUserPasswordInputDTO {
+  @Length(userPasswordConstraints.minLength, userPasswordConstraints.maxLength)
+  @Trim()
   @IsString()
-  @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
   newPassword: string;
 
-  @IsString()
   @IsUUID()
+  @Trim()
+  @IsString()
   recoveryCode: string;
 }

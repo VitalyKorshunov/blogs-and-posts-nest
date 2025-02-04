@@ -1,14 +1,20 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PostId } from '../../dto/post.dto';
-import { CreatePostInputDTO } from '../../api/input-dto/posts.input-dto';
+import { PostId } from '../../domain/dto/post.dto';
 import { BlogDocument } from '../../../blogs/domain/blog.entity';
 import { Post, PostDocument, PostModelType } from '../../domain/post.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
 
+class CreatePostCommandDTO {
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+}
+
 export class CreatePostCommand extends Command<PostId> {
-  constructor(public dto: CreatePostInputDTO) {
+  constructor(public dto: CreatePostCommandDTO) {
     super();
   }
 }

@@ -1,5 +1,5 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UserId } from '../../dto/user.dto';
+import { UserId } from '../../domain/dto/user.dto';
 import { LoginSuccessDTO } from '../../api/view-dto/auth.view-dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserContextDTO } from '../../guards/dto/user-context.dto';

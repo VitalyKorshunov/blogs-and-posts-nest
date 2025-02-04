@@ -1,5 +1,4 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdatePostLikeInputDTO } from '../../api/input-dto/posts.input-dto';
 import { PostDocument } from '../../domain/post.entity';
 import { UserDocument } from '../../../../user-accounts/domain/user.entity';
 import {
@@ -11,15 +10,22 @@ import {
   CreateLikeDTO,
   LastNewestLikes,
   LikesAndDislikesCount,
-} from '../../../likes/dto/like.dto';
-import { UpdatePostLikesInfoDTO } from '../../dto/post.dto';
+} from '../../../likes/domain/dto/like.dto';
+import { UpdatePostLikesInfoDTO } from '../../domain/dto/post.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
 import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
 import { PostsRepository } from '../../infrastructure/posts.repository';
+import { LikeStatus } from '../../../likes/domain/dto/like-status';
+
+class UpdatePostLikeStatusCommandDTO {
+  postId: string;
+  userId: string;
+  likeStatus: LikeStatus;
+}
 
 export class UpdatePostLikeStatusCommand extends Command<void> {
-  constructor(public dto: UpdatePostLikeInputDTO) {
+  constructor(public dto: UpdatePostLikeStatusCommandDTO) {
     super();
   }
 }
@@ -36,6 +42,7 @@ export class UpdatePostLikeStatusUseCase
   ) {}
 
   async execute({ dto }: UpdatePostLikeStatusCommand): Promise<void> {
+    //TODO: Promise.all
     const post: PostDocument =
       await this.postsRepository.getPostByIdOrNotFoundError(dto.postId);
 

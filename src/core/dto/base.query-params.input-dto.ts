@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { IsEnum } from 'class-validator';
 
 class PaginationParams {
   @Type(() => Number)
@@ -28,6 +29,8 @@ export enum SortDirection {
  * @template T - The type of the field used for sorting.
  */
 export abstract class BaseSortablePaginationParams<T> extends PaginationParams {
+  @IsEnum(SortDirection)
   sortDirection: SortDirection = SortDirection.Desc;
+
   abstract sortBy: T;
 }

@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogDocument, BlogModelType } from '../domain/blog.entity';
-import { BlogId } from '../dto/blog.dto';
+import { BlogId } from '../domain/dto/blog.dto';
 import { ObjectId } from 'mongodb';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 
 @Injectable()
 export class BlogsRepository {
@@ -22,5 +22,14 @@ export class BlogsRepository {
     if (!blog) throw new NotFoundException('blog not found');
 
     return blog;
+  }
+
+  async isBlogIdExist(blogId: BlogId): Promise<boolean> {
+    const blog: number = await this.BlogModel.countDocuments({
+      _id: new ObjectId(blogId),
+      deletionStatus: DeletionStatus.NotDeleted,
+    });
+
+    return !!blog;
   }
 }

@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogModelType } from '../domain/blog.entity';
-import { BlogId } from '../dto/blog.dto';
+import { BlogId } from '../domain/dto/blog.dto';
 import { ObjectId } from 'mongodb';
 import { BlogViewDto } from '../api/view-dto/blogs.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { GetBlogsQueryParamsInputDto } from '../api/input-dto/get-blogs-query-params.input-dto';
+import { GetBlogsQueryParamsInputDTO } from '../api/input-dto/get-blogs-query-params.input-dto';
 import { FilterQuery } from 'mongoose';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 
 @Injectable()
 export class BlogsQueryRepository {
@@ -34,7 +34,7 @@ export class BlogsQueryRepository {
   }
 
   async getAllBlogs(
-    query: GetBlogsQueryParamsInputDto,
+    query: GetBlogsQueryParamsInputDTO,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
     const filter: FilterQuery<Blog> = {
       deletionStatus: DeletionStatus.NotDeleted,

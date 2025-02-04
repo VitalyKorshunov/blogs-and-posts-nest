@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CommentId } from '../dto/comment.dto';
+import { CommentId } from '../domain/dto/comment.dto';
 import {
   Comment,
   CommentDocument,
@@ -7,7 +7,7 @@ import {
 } from '../domain/comment.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { ObjectId } from 'mongodb';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 
 @Injectable()
 export class CommentsRepository {

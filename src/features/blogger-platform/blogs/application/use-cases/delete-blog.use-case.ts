@@ -1,5 +1,5 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BlogId } from '../../dto/blog.dto';
+import { BlogId } from '../../domain/dto/blog.dto';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
 import { BlogDocument } from '../../domain/blog.entity';
 

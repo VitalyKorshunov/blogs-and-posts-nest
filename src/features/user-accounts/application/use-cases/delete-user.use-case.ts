@@ -1,5 +1,5 @@
 import { UsersRepository } from '../../infrastructure/users.repository';
-import { UserId } from '../../dto/user.dto';
+import { UserId } from '../../domain/dto/user.dto';
 import { UserDocument } from '../../domain/user.entity';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 

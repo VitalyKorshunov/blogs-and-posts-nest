@@ -3,12 +3,12 @@ import { ObjectId } from 'mongodb';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModelType } from '../../domain/user.entity';
-import { UserId } from '../../dto/user.dto';
+import { UserId } from '../../domain/dto/user.dto';
 import { UserViewDto } from '../../api/view-dto/users.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 
 @Injectable()
 export class UsersQueryRepository {

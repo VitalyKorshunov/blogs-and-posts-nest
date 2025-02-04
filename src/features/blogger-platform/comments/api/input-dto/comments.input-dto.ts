@@ -1,46 +1,27 @@
-import { LikeStatus } from '../../../../../core/dto/like-status';
-import { IsEnum, IsString, Length } from 'class-validator';
+import { LikeStatus } from '../../../likes/domain/dto/like-status';
+import { IsEnum } from 'class-validator';
 import { commentContentConstraints } from '../../domain/comment.entity';
+import { IsStringWithTrimWithLength } from '../../../../../core/decorators/validators/is-string-with-trim-with-length';
+import { Trim } from '../../../../../core/decorators/transform/trim';
 
 export class CreateCommentInputDTO {
-  postId: string;
-  userId: string;
-
-  @IsString()
-  @Length(
+  @IsStringWithTrimWithLength(
     commentContentConstraints.minLength,
     commentContentConstraints.maxLength,
   )
-  content: string;
-}
-
-export class DeleteCommentInputDTO {
-  userId: string;
-  commentId: string;
-}
-
-export class UpdateCommentInputCommandDTO {
-  userId: string;
-  commentId: string;
   content: string;
 }
 
 export class UpdateCommentInputDTO {
-  @IsString()
-  @Length(
+  @IsStringWithTrimWithLength(
     commentContentConstraints.minLength,
     commentContentConstraints.maxLength,
   )
   content: string;
 }
 
-export class UpdateCommentLikeStatusInputCommandDTO {
-  likeStatus: LikeStatus;
-  commentId: string;
-  userId: string;
-}
-
 export class UpdateCommentLikeStatusInputDTO {
+  @Trim()
   @IsEnum(LikeStatus)
   likeStatus: LikeStatus;
 }

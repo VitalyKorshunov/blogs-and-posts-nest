@@ -1,4 +1,4 @@
-import { LikeStatus } from '../../../../../core/dto/like-status';
+import { LikeStatus } from '../../../likes/domain/dto/like-status';
 import { CommentDocument } from '../../domain/comment.entity';
 
 export class CommentatorInfo {
@@ -19,7 +19,10 @@ export class CommentViewDTO {
   createdAt: string;
   likesInfo: LikesInfo;
 
-  static mapToView(comment: CommentDocument): CommentViewDTO {
+  static mapToView(
+    comment: CommentDocument,
+    userLikeStatus: LikeStatus,
+  ): CommentViewDTO {
     const dto = new CommentViewDTO();
 
     dto.id = comment.id;
@@ -32,7 +35,7 @@ export class CommentViewDTO {
     dto.likesInfo = {
       likesCount: comment.likesInfo.likesAndDislikesCount.likesCount,
       dislikesCount: comment.likesInfo.likesAndDislikesCount.dislikesCount,
-      myStatus: LikeStatus.None, //TODO HARDCODE
+      myStatus: userLikeStatus,
     };
 
     return dto;

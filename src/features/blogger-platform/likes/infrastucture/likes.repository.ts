@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Like, LikeDocument, LikeModelType } from '../domain/like.entity';
 import { ObjectId } from 'mongodb';
-import { LikeStatus } from '../../../../core/dto/like-status';
+import { LikeStatus } from '../domain/dto/like-status';
 import { InjectModel } from '@nestjs/mongoose';
-import { LastNewestLikes, LikesAndDislikesCount } from '../dto/like.dto';
-import { LAST_NEWEST_LIKES_COUNT_FOR_POST } from '../../../../main';
+import { LastNewestLikes, LikesAndDislikesCount } from '../domain/dto/like.dto';
+import { UserOptionalContextDTO } from '../../../user-accounts/guards/dto/user-context.dto';
+import { SETTINGS } from '../../../../settings';
 
 @Injectable()
 export class LikesRepository {
@@ -28,7 +29,7 @@ export class LikesRepository {
     postOrCommentId: string,
   ): Promise<LikesAndDislikesCount> {
     const parentObjectId = new ObjectId(postOrCommentId);
-
+    //TODO: Promise.all()
     const likesCount = await this.LikeModel.countDocuments({
       parentId: parentObjectId,
       likeStatus: LikeStatus.Like,
@@ -53,7 +54,7 @@ export class LikesRepository {
       likeStatus: LikeStatus.Like,
     })
       .sort({ createdAt: 'desc' })
-      .limit(LAST_NEWEST_LIKES_COUNT_FOR_POST);
+      .limit(SETTINGS.LAST_NEWEST_LIKES_COUNT_FOR_POST);
 
     return likes.map((like: LikeDocument): LastNewestLikes => {
       return {
@@ -62,5 +63,27 @@ export class LikesRepository {
         addedAt: like.createdAt.toISOString(),
       };
     });
+  }
+
+  async findUserLikeStatusForEntity(
+    entityIds: ObjectId[],
+    user: UserOptionalContextDTO,
+  ): Promise<
+    {
+      entityId: string;
+      userLikeStatus: LikeStatus;
+    }[]
+  > {
+    if (!user.userId) return [];
+
+    const userLikeForEntities: LikeDocument[] = await this.LikeModel.find({
+      parentId: { $in: entityIds },
+      userId: new ObjectId(user.userId),
+    });
+
+    return userLikeForEntities.map((like: LikeDocument) => ({
+      entityId: like.parentId.toString(),
+      userLikeStatus: like.likeStatus,
+    }));
   }
 }

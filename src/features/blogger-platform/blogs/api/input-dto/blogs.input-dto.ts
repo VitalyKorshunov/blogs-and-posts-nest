@@ -1,51 +1,58 @@
-import { CreateBlogDTO, UpdateBlogDTO } from '../../dto/blog.dto';
-import { IsString, Length, Matches } from 'class-validator';
+import { Matches } from 'class-validator';
 import {
   blogDescriptionConstraints,
   blogNameConstraints,
   blogWebsiteUrlConstraints,
 } from '../../domain/blog.entity';
+import { IsStringWithTrimWithLength } from '../../../../../core/decorators/validators/is-string-with-trim-with-length';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateBlogInputDTO implements CreateBlogDTO {
-  @IsString()
-  @Length(blogNameConstraints.minLength, blogNameConstraints.maxLength)
+export class CreateBlogInputDTO {
+  @IsStringWithTrimWithLength(
+    blogNameConstraints.minLength,
+    blogNameConstraints.maxLength,
+  )
   name: string;
 
-  @IsString()
-  @Length(
+  @IsStringWithTrimWithLength(
     blogDescriptionConstraints.minLength,
     blogDescriptionConstraints.maxLength,
   )
   description: string;
 
-  @Matches(
-    '^https:\\/\\/([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$',
-  )
-  @Length(
+  @ApiProperty({
+    example: 'https://some-site.com/first/second/etc',
+    pattern: blogWebsiteUrlConstraints.match.source,
+  })
+  @IsStringWithTrimWithLength(
     blogWebsiteUrlConstraints.minLength,
     blogWebsiteUrlConstraints.maxLength,
   )
+  @Matches(blogWebsiteUrlConstraints.match.source)
   websiteUrl: string;
 }
 
-export class UpdateBlogInputDTO implements UpdateBlogDTO {
-  @IsString()
-  @Length(blogNameConstraints.minLength, blogNameConstraints.maxLength)
+export class UpdateBlogInputDTO {
+  @IsStringWithTrimWithLength(
+    blogNameConstraints.minLength,
+    blogNameConstraints.maxLength,
+  )
   name: string;
 
-  @IsString()
-  @Length(
+  @IsStringWithTrimWithLength(
     blogDescriptionConstraints.minLength,
     blogDescriptionConstraints.maxLength,
   )
   description: string;
 
-  @Matches(
-    '^https:\\/\\/([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$',
-  )
-  @Length(
+  @ApiProperty({
+    example: 'https://some-site.com/first/second/etc',
+    pattern: blogWebsiteUrlConstraints.match.source,
+  })
+  @IsStringWithTrimWithLength(
     blogWebsiteUrlConstraints.minLength,
     blogWebsiteUrlConstraints.maxLength,
   )
+  @Matches(blogWebsiteUrlConstraints.match.source)
   websiteUrl: string;
 }

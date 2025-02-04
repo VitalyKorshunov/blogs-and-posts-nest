@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { CreateUserInputDTO } from '../api/input-dto/users.input-dto';
 import { User, UserDocument, UserModelType } from '../domain/user.entity';
-import { validateOrRejectModel } from '../../../core/validationOrReject';
 import { CryptoService } from './crypto.service';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -17,8 +16,6 @@ export class UsersService {
   async checkLoginAndEmailAndCreateUser(
     dto: CreateUserInputDTO,
   ): Promise<UserDocument> {
-    await validateOrRejectModel(dto, CreateUserInputDTO);
-
     await this.validateLogin(dto.login);
     await this.validateEmail(dto.email);
 

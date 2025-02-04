@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBasicAuth } from '@nestjs/swagger';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
-import { UserId } from '../dto/user.dto';
+import { UserId } from '../domain/dto/user.dto';
 import { UserViewDto } from './view-dto/users.view-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';

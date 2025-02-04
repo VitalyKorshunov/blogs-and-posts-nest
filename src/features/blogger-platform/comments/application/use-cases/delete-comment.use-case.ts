@@ -1,11 +1,15 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { DeleteCommentInputDTO } from '../../api/input-dto/comments.input-dto';
 import { CommentDocument } from '../../domain/comment.entity';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
 import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
 
+class DeleteCommentCommandDTO {
+  userId: string;
+  commentId: string;
+}
+
 export class DeleteCommentCommand extends Command<void> {
-  constructor(public dto: DeleteCommentInputDTO) {
+  constructor(public dto: DeleteCommentCommandDTO) {
     super();
   }
 }

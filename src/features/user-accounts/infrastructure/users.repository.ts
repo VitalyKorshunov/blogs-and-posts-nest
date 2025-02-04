@@ -6,8 +6,8 @@ import {
 import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { ObjectId } from 'mongodb';
 import { InjectModel } from '@nestjs/mongoose';
-import { UserId } from '../dto/user.dto';
-import { DeletionStatus } from '../../../core/dto/deletion-statuses';
+import { UserId } from '../domain/dto/user.dto';
+import { DeletionStatus } from '../../../core/dto/deletion-status';
 
 @Injectable()
 export class UsersRepository {

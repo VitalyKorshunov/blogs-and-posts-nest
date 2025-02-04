@@ -1,28 +1,43 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import {
   CreatePostDTO,
   UpdatePostDTO,
   UpdatePostLikesInfoDTO,
-} from '../dto/post.dto';
+} from './dto/post.dto';
 import { ObjectId } from 'mongodb';
 import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PostLikesInfo, PostLikesInfoSchema } from './post.likes-info.schema';
-import { LAST_NEWEST_LIKES_COUNT_FOR_POST } from '../../../../main';
+import { SETTINGS } from '../../../../settings';
+
+export const postTitleConstraints = {
+  minLength: 1,
+  maxLength: 30,
+};
+
+export const postShortDescriptionConstraints = {
+  minLength: 1,
+  maxLength: 100,
+};
+
+export const postContentConstraints = {
+  minLength: 1,
+  maxLength: 1000,
+};
 
 @Schema({ timestamps: true })
 export class Post {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...postTitleConstraints })
   title: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...postShortDescriptionConstraints })
   shortDescription: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...postContentConstraints })
   content: string;
 
   @Prop({ type: Types.ObjectId, required: true })
@@ -84,9 +99,11 @@ export class Post {
         `'likesCount' and 'dislikesCount' must be greater than or equal 0`,
       );
     }
-    if (dto.lastNewestLikes.length > LAST_NEWEST_LIKES_COUNT_FOR_POST) {
+    if (
+      dto.lastNewestLikes.length > SETTINGS.LAST_NEWEST_LIKES_COUNT_FOR_POST
+    ) {
       throw new InternalServerErrorException(
-        `the length of the array should not be more than ${LAST_NEWEST_LIKES_COUNT_FOR_POST}`,
+        `the length of the array should not be more than ${SETTINGS.LAST_NEWEST_LIKES_COUNT_FOR_POST}`,
       );
     }
 

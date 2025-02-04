@@ -1,7 +1,7 @@
 import { HydratedDocument, Model } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { CreateBlogDTO, UpdateBlogDTO } from '../dto/blog.dto';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { CreateBlogDTO, UpdateBlogDTO } from './dto/blog.dto';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import { BadRequestException } from '@nestjs/common';
 
 export const blogNameConstraints = {
@@ -17,7 +17,9 @@ export const blogDescriptionConstraints = {
 export const blogWebsiteUrlConstraints = {
   minLength: 11,
   maxLength: 100,
-  match: /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/,
+  match: new RegExp(
+    `^https://([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$`,
+  ),
 };
 
 @Schema({ timestamps: true })

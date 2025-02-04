@@ -1,5 +1,4 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdateCommentLikeStatusInputCommandDTO } from '../../api/input-dto/comments.input-dto';
 import { CommentDocument } from '../../domain/comment.entity';
 import { UserDocument } from '../../../../user-accounts/domain/user.entity';
 import {
@@ -10,14 +9,21 @@ import {
 import {
   CreateLikeDTO,
   LikesAndDislikesCount,
-} from '../../../likes/dto/like.dto';
+} from '../../../likes/domain/dto/like.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
 import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
+import { LikeStatus } from '../../../likes/domain/dto/like-status';
+
+class UpdateCommentLikeStatusCommandDTO {
+  likeStatus: LikeStatus;
+  commentId: string;
+  userId: string;
+}
 
 export class UpdateCommentLikeStatusCommand extends Command<void> {
-  constructor(public dto: UpdateCommentLikeStatusInputCommandDTO) {
+  constructor(public dto: UpdateCommentLikeStatusCommandDTO) {
     super();
   }
 }
@@ -34,6 +40,7 @@ export class UpdateCommentLikeStatusUseCase
   ) {}
 
   async execute({ dto }: UpdateCommentLikeStatusCommand): Promise<void> {
+    //TODO: Promise.all
     const comment: CommentDocument =
       await this.commentsRepository.getCommentByIdOrNotFoundError(
         dto.commentId,

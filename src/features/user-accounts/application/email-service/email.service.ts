@@ -2,11 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SETTINGS } from '../../../../settings';
 
-class SendEmailDTO {
+interface SendEmailDTO {
   email: string;
   subject: string;
   templateName: string;
   context: object;
+}
+
+enum TemplateName {
+  Registration = 'registration',
+  RecoveryPassword = 'recovery-password',
 }
 
 @Injectable()
@@ -17,9 +22,9 @@ export class EmailService {
     const dto: SendEmailDTO = {
       email,
       subject: 'Finish creating your account',
-      templateName: 'registration',
+      templateName: TemplateName.Registration,
       context: {
-        code: confirmationCode,
+        confirmationCode,
       },
     };
     this.sendEmail(dto);
@@ -29,9 +34,9 @@ export class EmailService {
     const dto: SendEmailDTO = {
       email,
       subject: 'Finish creating your account',
-      templateName: 'registration',
+      templateName: TemplateName.Registration,
       context: {
-        code: confirmationCode,
+        confirmationCode,
       },
     };
     this.sendEmail(dto);
@@ -41,7 +46,7 @@ export class EmailService {
     const dto: SendEmailDTO = {
       email,
       subject: 'Recovery password',
-      templateName: 'recovery-password',
+      templateName: TemplateName.RecoveryPassword,
       context: {
         recoveryCode,
       },
@@ -59,10 +64,10 @@ export class EmailService {
         context: dto.context,
       })
       .then((success) => {
-        console.log(success);
+        // console.log(success);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
       });
   }
 }

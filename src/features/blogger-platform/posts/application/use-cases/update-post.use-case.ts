@@ -1,16 +1,19 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdatePostInputDTO } from '../../api/input-dto/posts.input-dto';
 import { BlogDocument } from '../../../blogs/domain/blog.entity';
 import { PostDocument } from '../../domain/post.entity';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
-import { PostId } from '../../dto/post.dto';
+
+class UpdatePostCommandDTO {
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  postId: string;
+}
 
 export class UpdatePostCommand extends Command<void> {
-  constructor(
-    public dto: UpdatePostInputDTO,
-    public postId: PostId,
-  ) {
+  constructor(public dto: UpdatePostCommandDTO) {
     super();
   }
 }
@@ -22,12 +25,12 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
     private blogsRepository: BlogsRepository,
   ) {}
 
-  async execute({ dto, postId }: UpdatePostCommand): Promise<void> {
+  async execute({ dto }: UpdatePostCommand): Promise<void> {
     const blog: BlogDocument =
       await this.blogsRepository.getBlogByIdOrNotFoundError(dto.blogId);
 
     const post: PostDocument =
-      await this.postsRepository.getPostByIdOrNotFoundError(postId);
+      await this.postsRepository.getPostByIdOrNotFoundError(dto.postId);
 
     post.updatePost({
       title: dto.title,

@@ -1,4 +1,5 @@
 import { PostDocument } from '../../domain/post.entity';
+import { LikeStatus } from '../../../likes/domain/dto/like-status';
 
 class NewestLikes {
   addedAt: string;
@@ -9,7 +10,7 @@ class NewestLikes {
 class ExtendedLikesInfo {
   likesCount: number;
   dislikesCount: number;
-  myStatus: string;
+  myStatus: LikeStatus;
   newestLikes: NewestLikes[];
 }
 
@@ -23,7 +24,10 @@ export class PostViewDto {
   createdAt: string;
   extendedLikesInfo: ExtendedLikesInfo;
 
-  static mapToView(post: PostDocument): PostViewDto {
+  static mapToView(
+    post: PostDocument,
+    userLikeStatus: LikeStatus,
+  ): PostViewDto {
     const dto = new PostViewDto();
     dto.id = post.id;
     dto.title = post.title;
@@ -33,10 +37,10 @@ export class PostViewDto {
     dto.blogName = post.blogName;
     dto.createdAt = post.createdAt.toISOString();
     dto.extendedLikesInfo = {
-      likesCount: 0,
-      dislikesCount: 0,
-      myStatus: 'None',
-      newestLikes: [],
+      likesCount: post.likesInfo.likesAndDislikesCount.likesCount,
+      dislikesCount: post.likesInfo.likesAndDislikesCount.dislikesCount,
+      myStatus: userLikeStatus,
+      newestLikes: post.likesInfo.newestUserLikes,
     };
 
     return dto;

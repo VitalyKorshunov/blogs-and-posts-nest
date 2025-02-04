@@ -1,5 +1,5 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PostId } from '../../dto/post.dto';
+import { PostId } from '../../domain/dto/post.dto';
 import { PostDocument } from '../../domain/post.entity';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 

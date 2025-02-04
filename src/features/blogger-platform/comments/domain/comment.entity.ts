@@ -4,7 +4,7 @@ import {
   CreateCommentDTO,
   UpdateCommentDTO,
   UpdateCommentLikeInfoDTO,
-} from '../dto/comment.dto';
+} from './dto/comment.dto';
 import { ObjectId } from 'mongodb';
 import {
   CommentCommentatorInfo,
@@ -14,7 +14,7 @@ import {
   CommentLikesInfo,
   CommentLikesInfoSchema,
 } from './comment.likes-info.schema';
-import { DeletionStatus } from '../../../../core/dto/deletion-statuses';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import {
   BadRequestException,
   ForbiddenException,

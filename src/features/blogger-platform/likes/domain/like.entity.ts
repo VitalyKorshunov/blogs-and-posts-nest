@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { CreateLikeDTO } from '../dto/like.dto';
-import { LikeStatus } from '../../../../core/dto/like-status';
+import { CreateLikeDTO } from './dto/like.dto';
+import { LikeStatus } from './dto/like-status';
 import { ObjectId } from 'mongodb';
 
 @Schema({ timestamps: true })

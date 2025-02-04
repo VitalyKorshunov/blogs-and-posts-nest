@@ -8,6 +8,8 @@ export function swaggerSetup(app: INestApplication) {
     .setDescription('API for Blogger Platform')
     .setVersion('1.0')
     .addTag('Blogs-And-Posts')
+    .addBearerAuth()
+    .addBasicAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

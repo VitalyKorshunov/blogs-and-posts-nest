@@ -16,17 +16,14 @@ import {
   CreateBlogInputDTO,
   UpdateBlogInputDTO,
 } from './input-dto/blogs.input-dto';
-import { BlogId } from '../dto/blog.dto';
+import { BlogId } from '../domain/dto/blog.dto';
 import { BlogViewDto } from './view-dto/blogs.view-dto';
-import { GetBlogsQueryParamsInputDto } from './input-dto/get-blogs-query-params.input-dto';
+import { GetBlogsQueryParamsInputDTO } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { PostsQueryRepository } from '../../posts/infrastructure/posts.query-repository';
-import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
+import { PostsQueryRepository } from '../../posts/infrastructure/query-repository/posts.query-repository';
+import { GetPostsQueryParamsInputDTO } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
-import {
-  CreatePostForBlogInputDTO,
-  CreatePostInputDTO,
-} from '../../posts/api/input-dto/posts.input-dto';
+import { CreatePostForBlogInputDTO } from '../../posts/api/input-dto/posts.input-dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { CreateBlogCommand } from '../application/use-cases/create-blog.use-case';
 import { UpdateBlogCommand } from '../application/use-cases/update-blog.use-case';
@@ -35,6 +32,10 @@ import { CreatePostCommand } from '../../posts/application/use-cases/create-post
 import { ApiBasicAuth } from '@nestjs/swagger';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic.guard';
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserOptionalFromRequest } from '../../../user-accounts/guards/decorators/extract-user-from-request.decorator';
+import { UserOptionalContextDTO } from '../../../user-accounts/guards/dto/user-context.dto';
+import { PostId } from '../../posts/domain/dto/post.dto';
 
 @Controller('blogs')
 export class BlogsControllers {
@@ -46,7 +47,7 @@ export class BlogsControllers {
 
   @Get()
   async getAllBlogs(
-    @Query() query: GetBlogsQueryParamsInputDto,
+    @Query() query: GetBlogsQueryParamsInputDTO,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
     return await this.blogsQueryRepository.getAllBlogs(query);
   }
@@ -54,22 +55,34 @@ export class BlogsControllers {
   @Post()
   @UseGuards(BasicAuthGuard)
   @ApiBasicAuth()
-  //TODO: хорошая ли практика сделать отдельный декоратор, который объединяет @UseGuards(LocalAuthGuard) и @ApiBasicAuth()?
   async createBlog(@Body() dto: CreateBlogInputDTO): Promise<BlogViewDto> {
     const blogId: BlogId = await this.commandBus.execute(
-      new CreateBlogCommand(dto),
+      new CreateBlogCommand({
+        name: dto.name,
+        description: dto.description,
+        websiteUrl: dto.websiteUrl,
+      }),
     );
 
     return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
   @Get(':blogId/posts')
+  @UseGuards(JwtOptionalAuthGuard)
   async getAllPostsForBlog(
     @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
-    @Query() query: GetPostsQueryParams,
+    @Query() query: GetPostsQueryParamsInputDTO,
+    @ExtractUserOptionalFromRequest() user: UserOptionalContextDTO,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(blogId);
-    return await this.postsQueryRepository.getAllPostsForBlog(query, blogId);
+
+    return await this.postsQueryRepository.getAllPostsForBlog(
+      {
+        user: user,
+        query: query,
+      },
+      blogId,
+    );
   }
 
   @Post(':blogId/posts')
@@ -77,15 +90,20 @@ export class BlogsControllers {
   @ApiBasicAuth()
   async createPostInBlog(
     @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
-    @Body() body: CreatePostForBlogInputDTO,
+    @Body() createPostForBlogInputDTO: CreatePostForBlogInputDTO,
   ): Promise<PostViewDto> {
-    const dto: CreatePostInputDTO = {
-      ...body,
-      blogId: blogId,
-    };
-    const postId = await this.commandBus.execute(new CreatePostCommand(dto));
+    const postId: PostId = await this.commandBus.execute(
+      new CreatePostCommand({
+        blogId: blogId,
+        title: createPostForBlogInputDTO.title,
+        shortDescription: createPostForBlogInputDTO.shortDescription,
+        content: createPostForBlogInputDTO.content,
+      }),
+    );
 
-    return this.postsQueryRepository.getPostByIdOrNotFoundError(postId);
+    const user = { userId: null };
+
+    return this.postsQueryRepository.getPostByIdOrNotFoundError(postId, user);
   }
 
   @Get(':blogId')
@@ -100,10 +118,17 @@ export class BlogsControllers {
   @UseGuards(BasicAuthGuard)
   @ApiBasicAuth()
   async updateBlog(
-    @Body() dto: UpdateBlogInputDTO,
+    @Body() updateBlogInputDTO: UpdateBlogInputDTO,
     @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
   ): Promise<BlogViewDto> {
-    await this.commandBus.execute(new UpdateBlogCommand(dto, blogId));
+    await this.commandBus.execute(
+      new UpdateBlogCommand({
+        blogId: blogId,
+        name: updateBlogInputDTO.name,
+        description: updateBlogInputDTO.description,
+        websiteUrl: updateBlogInputDTO.websiteUrl,
+      }),
+    );
 
     return this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }

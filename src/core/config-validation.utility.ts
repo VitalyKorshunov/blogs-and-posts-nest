@@ -15,7 +15,7 @@ export const configValidationUtility = {
     }
   },
   convertToBoolean(value: string) {
-    const trimmedValue = value.trim();
+    const trimmedValue = value?.trim();
 
     switch (trimmedValue) {
       case 'true':

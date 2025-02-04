@@ -1,12 +1,17 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdateCommentInputCommandDTO } from '../../api/input-dto/comments.input-dto';
 import { CommentDocument } from '../../domain/comment.entity';
-import { UpdateCommentDTO } from '../../dto/comment.dto';
+import { UpdateCommentDTO } from '../../domain/dto/comment.dto';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
 import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
 
+class UpdateCommentCommandDTO {
+  userId: string;
+  commentId: string;
+  content: string;
+}
+
 export class UpdateCommentCommand extends Command<void> {
-  constructor(public dto: UpdateCommentInputCommandDTO) {
+  constructor(public dto: UpdateCommentCommandDTO) {
     super();
   }
 }

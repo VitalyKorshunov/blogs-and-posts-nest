@@ -1,7 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BlogId } from '../../dto/blog.dto';
+import { BlogId } from '../../domain/dto/blog.dto';
 import { CreateBlogInputDTO } from '../../api/input-dto/blogs.input-dto';
-import { validateOrRejectModel } from '../../../../../core/validationOrReject';
 import { Blog, BlogDocument, BlogModelType } from '../../domain/blog.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
@@ -20,8 +19,6 @@ export class CreateBlogUseCase implements ICommandHandler<CreateBlogCommand> {
   ) {}
 
   async execute({ dto }: CreateBlogCommand): Promise<BlogId> {
-    await validateOrRejectModel(dto, CreateBlogInputDTO);
-
     const blog: BlogDocument = this.BlogModel.createBlog({
       name: dto.name,
       description: dto.description,

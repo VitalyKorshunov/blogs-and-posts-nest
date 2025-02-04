@@ -1,5 +1,4 @@
-import { CreateCommentInputDTO } from '../../api/input-dto/comments.input-dto';
-import { CommentId, CreateCommentDTO } from '../../dto/comment.dto';
+import { CommentId, CreateCommentDTO } from '../../domain/dto/comment.dto';
 import { UserDocument } from '../../../../user-accounts/domain/user.entity';
 import {
   Comment,
@@ -12,8 +11,14 @@ import { UsersRepository } from '../../../../user-accounts/infrastructure/users.
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
 
+interface CreateCommentCommandDTO {
+  postId: string;
+  userId: string;
+  content: string;
+}
+
 export class CreateCommentCommand extends Command<CommentId> {
-  constructor(public dto: CreateCommentInputDTO) {
+  constructor(public dto: CreateCommentCommandDTO) {
     super();
   }
 }
