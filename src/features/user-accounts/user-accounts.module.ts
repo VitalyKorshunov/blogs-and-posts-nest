@@ -11,7 +11,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthControllers } from './api/auth.controller';
 import { AuthQueryRepository } from './infrastructure/query/auth.query-repository';
 import { AuthService } from './application/auth.service';
-import { JwtStrategy } from './guards/bearer/jwt.strategy';
+import { AccessTokenStrategy } from './guards/bearer/access-token.strategy';
 import { JwtService } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { SETTINGS } from '../../settings';
@@ -30,10 +30,16 @@ import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from './constants/auth-tokens.inject-constants';
+import { RefreshTokenStrategy } from './guards/cookie/refresh-token.strategy';
 
 const services = [UsersService, AuthService];
 
-const strategies = [LocalStrategy, JwtStrategy, BasicAuthStrategy];
+const strategies = [
+  LocalStrategy,
+  AccessTokenStrategy,
+  RefreshTokenStrategy,
+  BasicAuthStrategy,
+];
 
 const adapters = [CryptoService, EmailService];
 
@@ -58,13 +64,6 @@ const repositories = [
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     PassportModule,
-    // JwtModule.register({
-    //   global: true,
-    //   secret: JWT_SECRET,
-    //   signOptions: {
-    //     expiresIn: '5m',
-    //   },
-    // }),
     MailerModule.forRoot({
       transport: {
         host: SETTINGS.MAILER.HOST,
@@ -100,7 +99,8 @@ const repositories = [
         return new JwtService({
           secret: SETTINGS.TOKENS.ACCESS_TOKEN.SECRET_KEY,
           signOptions: {
-            expiresIn: SETTINGS.TOKENS.ACCESS_TOKEN.LIFETIME,
+            expiresIn: SETTINGS.TOKENS.ACCESS_TOKEN.LIFETIME_IN_MS,
+            noTimestamp: true,
           },
         });
       },
@@ -112,13 +112,14 @@ const repositories = [
         return new JwtService({
           secret: SETTINGS.TOKENS.REFRESH_TOKEN.SECRET_KEY,
           signOptions: {
-            expiresIn: SETTINGS.TOKENS.REFRESH_TOKEN.LIFETIME,
+            expiresIn: SETTINGS.TOKENS.REFRESH_TOKEN.LIFETIME_IN_MS,
+            noTimestamp: true,
           },
         });
       },
       inject: [],
     },
   ],
-  exports: [UsersRepository, JwtStrategy],
+  exports: [UsersRepository, AccessTokenStrategy, RefreshTokenStrategy],
 })
 export class UserAccountsModule {}
