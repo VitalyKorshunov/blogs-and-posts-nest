@@ -14,10 +14,10 @@ import { AuthQueryRepository } from '../infrastructure/query/auth.query-reposito
 import { ExtractUserFromRequest } from '../guards/decorators/extract-user-from-request.decorator';
 import { UserContextDTO } from '../guards/dto/user-context.dto';
 import { MeViewDto } from './view-dto/users.view-dto';
-import { JwtAuthGuard } from '../guards/bearer/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../guards/bearer/access-token.guard';
 import { LocalAuthGuard } from '../guards/local/local-auth.guard';
 import { LoginSuccessDTO, LoginSuccessViewDTO } from './view-dto/auth.view-dto';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiCookieAuth } from '@nestjs/swagger';
 import {
   ChangeUserPasswordInputDTO,
   ConfirmationCodeInputDTO,
@@ -34,6 +34,8 @@ import { ResendUserConfirmationEmailCommand } from '../application/use-cases/res
 import { SendUserRecoveryPasswordCommand } from '../application/use-cases/send-user-recovery-password.use-case';
 import { ChangeUserPasswordCommand } from '../application/use-cases/change-user-password.use-case';
 import { Response } from 'express';
+import { RefreshTokenPayloadDTO } from '../guards/dto/tokens.dto';
+import { RefreshTokenAuthGuard } from '../guards/cookie/refresh-token.guard';
 
 @Controller('auth')
 export class AuthControllers {
@@ -85,7 +87,7 @@ export class AuthControllers {
 
   @Get('me')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   async getUserInfo(
     @ExtractUserFromRequest() user: UserContextDTO,
   ): Promise<MeViewDto> {
@@ -112,24 +114,28 @@ export class AuthControllers {
     await this.commandBus.execute(new ResendUserConfirmationEmailCommand(dto));
   }
 
-  //
-  // async updateTokens(req: Request, res: Response) {
-  //   const { refreshToken } = req.cookies;
-  //
-  //   const result = await this.authService.updateTokens(refreshToken);
-  //
-  //   if (result.statusCode === StatusCode.Success) {
-  //     const { accessToken, refreshToken }: AuthTokensType = result.data;
-  //
-  //     res.cookie('refreshToken', refreshToken, {
-  //       httpOnly: true,
-  //       secure: true,
-  //     });
-  //     res.status(200).json({ accessToken: accessToken });
-  //   } else {
-  //     handleError(result, res);
-  //   }
-  // }
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiCookieAuth()
+  @UseGuards(RefreshTokenAuthGuard)
+  async updateTokens(
+    @ExtractUserFromRequest() refreshToken: RefreshTokenPayloadDTO,
+  ) {
+    console.log(refreshToken);
+    // const result = await this.authService.updateTokens(refreshToken);
+    //
+    // if (result.statusCode === StatusCode.Success) {
+    //   const { accessToken, refreshToken }: AuthTokensType = result.data;
+    //
+    //   res.cookie('refreshToken', refreshToken, {
+    //     httpOnly: true,
+    //     secure: true,
+    //   });
+    //   res.status(200).json({ accessToken: accessToken });
+    // } else {
+    //   handleError(result, res);
+    // }
+  }
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
