@@ -27,22 +27,22 @@ import { CreatePostCommand } from '../application/use-cases/create-post.use-case
 import { DeletePostCommand } from '../application/use-cases/delete-post.use-case';
 import { UpdatePostCommand } from '../application/use-cases/update-post.use-case';
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
-import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic.guard';
+import { BasicAuthGuard } from '../../../user-accounts/users/guards/basic/basic.guard';
 import { ApiBasicAuth, ApiBearerAuth } from '@nestjs/swagger';
 import { CommentViewDTO } from '../../comments/api/view-dto/comments.view-dto';
 import { GetCommentsQueryParamsInputDTO } from '../../comments/api/input-dto/get-comments-query-params.input-dto';
 import {
   ExtractUserFromRequest,
   ExtractUserOptionalFromRequest,
-} from '../../../user-accounts/guards/decorators/extract-user-from-request.decorator';
-import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+} from '../../../user-accounts/users/guards/decorators/extract-user-from-request.decorator';
+import { AccessTokenOptionalAuthGuard } from '../../../user-accounts/users/guards/bearer/access-token-optional-auth.guard';
 import {
   UserContextDTO,
   UserOptionalContextDTO,
-} from '../../../user-accounts/guards/dto/user-context.dto';
+} from '../../../user-accounts/users/guards/dto/user-context.dto';
 import { GetAllPostsQueryContextDTO } from '../infrastructure/query-repository/dto/post-query.dto';
 import { GetAllCommentsForPostQueryContextDTO } from '../../comments/infrastructure/query-repository/dto/comment-query.dto';
-import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../../../user-accounts/users/guards/bearer/access-token.guard';
 import { CreateCommentInputDTO } from '../../comments/api/input-dto/comments.input-dto';
 import { CreateCommentCommand } from '../../comments/application/use-cases/create-comment.use-case';
 import { CommentId } from '../../comments/domain/dto/comment.dto';
@@ -58,7 +58,7 @@ export class PostsControllers {
 
   @Put(':postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   @ApiBearerAuth()
   async updateUserLikeStatusForPost(
     @Param('postId') postId: PostId,
@@ -75,7 +75,7 @@ export class PostsControllers {
   }
 
   @Get(':postId/comments')
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(AccessTokenOptionalAuthGuard)
   async getAllCommentsForPost(
     @Param('postId') postId: PostId,
     @Query() query: GetCommentsQueryParamsInputDTO,
@@ -93,7 +93,7 @@ export class PostsControllers {
   }
 
   @Post(':postId/comments')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   @ApiBearerAuth()
   async createCommentInPost(
     @Param('postId') postId: PostId,
@@ -115,7 +115,7 @@ export class PostsControllers {
   }
 
   @Get()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(AccessTokenOptionalAuthGuard)
   async getAllPosts(
     @Query() query: GetPostsQueryParamsInputDTO,
     @ExtractUserOptionalFromRequest() user: UserOptionalContextDTO,
@@ -151,7 +151,7 @@ export class PostsControllers {
   }
 
   @Get(':postId')
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(AccessTokenOptionalAuthGuard)
   async getPost(
     @Param('postId', ObjectIdValidationPipe) postId: PostId,
     @ExtractUserOptionalFromRequest() user: UserOptionalContextDTO,

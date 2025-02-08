@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { SETTINGS } from '../../../../settings';
+import { SETTINGS } from '../../../../../settings';
 
 interface SendEmailDTO {
   email: string;

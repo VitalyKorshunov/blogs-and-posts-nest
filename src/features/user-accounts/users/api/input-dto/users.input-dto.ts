@@ -5,7 +5,7 @@ import {
   userPasswordConstraints,
 } from '../../domain/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { Trim } from '../../../../core/decorators/transform/trim';
+import { Trim } from '../../../../../core/decorators/transform/trim';
 
 class UserEmailDTO {
   @ApiProperty({

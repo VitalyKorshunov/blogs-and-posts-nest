@@ -1,6 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostDocument } from '../../domain/post.entity';
-import { UserDocument } from '../../../../user-accounts/domain/user.entity';
+import { UserDocument } from '../../../../user-accounts/users/domain/user.entity';
 import {
   Like,
   LikeDocument,
@@ -14,7 +14,7 @@ import {
 import { UpdatePostLikesInfoDTO } from '../../domain/dto/post.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
-import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
+import { UsersRepository } from '../../../../user-accounts/users/infrastructure/users.repository';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { LikeStatus } from '../../../likes/domain/dto/like-status';
 

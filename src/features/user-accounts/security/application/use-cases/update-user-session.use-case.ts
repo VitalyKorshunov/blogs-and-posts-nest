@@ -31,6 +31,7 @@ export class UpdateUserSessionUseCase
     const session: SecurityDocument | null =
       await this.securityRepository.findUserSessionByDeviceId(
         refreshTokenPayload.deviceId,
+        refreshTokenPayload.lastActiveDate,
       );
 
     if (!session) {
@@ -39,7 +40,7 @@ export class UpdateUserSessionUseCase
 
     session.updateSession({
       lastActiveDate: refreshTokenPayload.lastActiveDate,
-      expireAt: new Date(refreshTokenPayload.exp).toISOString(),
+      expireAt: new Date(refreshTokenPayload.exp * 1000).toISOString(),
     });
 
     await this.securityRepository.save(session);

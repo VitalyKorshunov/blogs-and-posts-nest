@@ -41,7 +41,7 @@ export class CreateSessionUseCase
       deviceName: dto.deviceName,
       ip: dto.ip,
       lastActiveDate: payload.lastActiveDate,
-      expireAt: new Date(payload.exp).toISOString(),
+      expireAt: new Date(payload.exp * 1000).toISOString(),
     });
 
     await this.securityRepository.save(session);

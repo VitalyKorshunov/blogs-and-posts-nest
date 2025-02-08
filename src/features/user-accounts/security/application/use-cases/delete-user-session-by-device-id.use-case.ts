@@ -8,6 +8,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 class DeleteUserSessionByDeviceIdCommandDTO {
   userId: UserId;
   deviceId: DeviceId;
+  lastActiveDate: string;
 }
 
 export class DeleteUserSessionByDeviceIdCommand extends Command<void> {
@@ -24,7 +25,10 @@ export class DeleteUserSessionByDeviceIdUseCase
 
   async execute({ dto }: DeleteUserSessionByDeviceIdCommand): Promise<void> {
     const session: SecurityDocument | null =
-      await this.securityRepository.findUserSessionByDeviceId(dto.deviceId);
+      await this.securityRepository.findUserSessionByDeviceId(
+        dto.deviceId,
+        dto.lastActiveDate,
+      );
 
     if (!session) throw new NotFoundException('session not found');
 

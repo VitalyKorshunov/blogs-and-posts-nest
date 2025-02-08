@@ -2,21 +2,21 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
+  Ip,
   Post,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from '../application/auth.service';
-import { UsersService } from '../application/users.service';
 import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
 import { ExtractUserFromRequest } from '../guards/decorators/extract-user-from-request.decorator';
 import { UserContextDTO } from '../guards/dto/user-context.dto';
 import { MeViewDto } from './view-dto/users.view-dto';
 import { AccessTokenAuthGuard } from '../guards/bearer/access-token.guard';
 import { LocalAuthGuard } from '../guards/local/local-auth.guard';
-import { LoginSuccessDTO, LoginSuccessViewDTO } from './view-dto/auth.view-dto';
+import { AccessTokenViewDTO, LoginSuccessDTO } from './view-dto/auth.view-dto';
 import { ApiBearerAuth, ApiBody, ApiCookieAuth } from '@nestjs/swagger';
 import {
   ChangeUserPasswordInputDTO,
@@ -25,7 +25,6 @@ import {
   EmailResendingInputDTO,
   PasswordRecoveryInputDTO,
 } from './input-dto/users.input-dto';
-import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
 import { CommandBus } from '@nestjs/cqrs';
 import { LoginUserCommand } from '../application/use-cases/login-user.use-case';
 import { RegistrationUserCommand } from '../application/use-cases/registration-user.use-case';
@@ -36,16 +35,35 @@ import { ChangeUserPasswordCommand } from '../application/use-cases/change-user-
 import { Response } from 'express';
 import { RefreshTokenPayloadDTO } from '../guards/dto/tokens.dto';
 import { RefreshTokenAuthGuard } from '../guards/cookie/refresh-token.guard';
+import { CreateSessionCommand } from '../../security/application/use-cases/create-session.use-case';
+import { DeleteUserSessionByDeviceIdCommand } from '../../security/application/use-cases/delete-user-session-by-device-id.use-case';
+import { UpdateTokensCommand } from '../application/use-cases/update-tokens.use-case';
+import { UpdateUserSessionCommand } from '../../security/application/use-cases/update-user-session.use-case';
+import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 
+@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthControllers {
   constructor(
-    private authService: AuthService,
     private authQueryRepository: AuthQueryRepository,
-    private usersService: UsersService,
-    private usersQueryRepository: UsersQueryRepository,
     private commandBus: CommandBus,
   ) {}
+
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async sendUserRecoveryPassword(
+    @Body() dto: PasswordRecoveryInputDTO,
+  ): Promise<void> {
+    await this.commandBus.execute(new SendUserRecoveryPasswordCommand(dto));
+  }
+
+  @Post('new-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changeUserPassword(
+    @Body() dto: ChangeUserPasswordInputDTO,
+  ): Promise<void> {
+    await this.commandBus.execute(new ChangeUserPasswordCommand(dto));
+  }
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
@@ -62,9 +80,19 @@ export class AuthControllers {
   async loginUser(
     @ExtractUserFromRequest() user: UserContextDTO,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<LoginSuccessViewDTO> {
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string | undefined,
+  ): Promise<AccessTokenViewDTO> {
     const tokens: LoginSuccessDTO = await this.commandBus.execute(
-      new LoginUserCommand(user.userId),
+      new LoginUserCommand({ userId: user.userId }),
+    );
+
+    await this.commandBus.execute(
+      new CreateSessionCommand({
+        refreshToken: tokens.refreshToken,
+        deviceName: userAgent ?? 'Not defined',
+        ip: ip,
+      }),
     );
 
     res.cookie('refreshToken', tokens.refreshToken, {
@@ -75,35 +103,46 @@ export class AuthControllers {
     return { accessToken: tokens.accessToken };
   }
 
-  // async logoutUser(req: Request, res: Response) {
-  //   const result = await this.authService.logoutUser(req.cookies.refreshToken);
-  //
-  //   if (result.statusCode === StatusCode.Success) {
-  //     res.sendStatus(204);
-  //   } else {
-  //     handleError(result, res);
-  //   }
-  // }
+  @SkipThrottle()
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiCookieAuth()
+  @UseGuards(RefreshTokenAuthGuard)
+  async updateTokens(
+    @Res({ passthrough: true }) res: Response,
+    @ExtractUserFromRequest() refreshTokenPayload: RefreshTokenPayloadDTO,
+  ): Promise<AccessTokenViewDTO> {
+    const tokens = await this.commandBus.execute(
+      new UpdateTokensCommand({
+        deviceId: refreshTokenPayload.deviceId,
+        userId: refreshTokenPayload.userId,
+      }),
+    );
 
-  @Get('me')
-  @ApiBearerAuth()
-  @UseGuards(AccessTokenAuthGuard)
-  async getUserInfo(
-    @ExtractUserFromRequest() user: UserContextDTO,
-  ): Promise<MeViewDto> {
-    return await this.authQueryRepository.getMeInfo(user.userId);
-  }
+    await this.commandBus.execute(
+      new UpdateUserSessionCommand({
+        refreshToken: tokens.refreshToken,
+      }),
+    );
 
-  @Post('registration')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async registrationUser(@Body() dto: CreateUserInputDTO): Promise<void> {
-    await this.commandBus.execute(new RegistrationUserCommand(dto));
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+    });
+
+    return { accessToken: tokens.accessToken };
   }
 
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmUserEmail(@Body() dto: ConfirmationCodeInputDTO): Promise<void> {
     await this.commandBus.execute(new ConfirmUserEmailCommand(dto));
+  }
+
+  @Post('registration')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async registrationUser(@Body() dto: CreateUserInputDTO): Promise<void> {
+    await this.commandBus.execute(new RegistrationUserCommand(dto));
   }
 
   @Post('registration-email-resending')
@@ -114,42 +153,29 @@ export class AuthControllers {
     await this.commandBus.execute(new ResendUserConfirmationEmailCommand(dto));
   }
 
-  @Post('refresh-token')
-  @HttpCode(HttpStatus.OK)
-  @ApiCookieAuth()
+  @SkipThrottle()
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(RefreshTokenAuthGuard)
-  async updateTokens(
-    @ExtractUserFromRequest() refreshToken: RefreshTokenPayloadDTO,
-  ) {
-    console.log(refreshToken);
-    // const result = await this.authService.updateTokens(refreshToken);
-    //
-    // if (result.statusCode === StatusCode.Success) {
-    //   const { accessToken, refreshToken }: AuthTokensType = result.data;
-    //
-    //   res.cookie('refreshToken', refreshToken, {
-    //     httpOnly: true,
-    //     secure: true,
-    //   });
-    //   res.status(200).json({ accessToken: accessToken });
-    // } else {
-    //   handleError(result, res);
-    // }
+  async logoutUser(
+    @ExtractUserFromRequest() refreshTokenPayload: RefreshTokenPayloadDTO,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new DeleteUserSessionByDeviceIdCommand({
+        userId: refreshTokenPayload.userId,
+        lastActiveDate: refreshTokenPayload.lastActiveDate,
+        deviceId: refreshTokenPayload.deviceId,
+      }),
+    );
   }
 
-  @Post('password-recovery')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async sendUserRecoveryPassword(
-    @Body() dto: PasswordRecoveryInputDTO,
-  ): Promise<void> {
-    await this.commandBus.execute(new SendUserRecoveryPasswordCommand(dto));
-  }
-
-  @Post('new-password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async changeUserPassword(
-    @Body() dto: ChangeUserPasswordInputDTO,
-  ): Promise<void> {
-    await this.commandBus.execute(new ChangeUserPasswordCommand(dto));
+  @SkipThrottle()
+  @Get('me')
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenAuthGuard)
+  async getUserInfo(
+    @ExtractUserFromRequest() user: UserContextDTO,
+  ): Promise<MeViewDto> {
+    return await this.authQueryRepository.getMeInfo(user.userId);
   }
 }

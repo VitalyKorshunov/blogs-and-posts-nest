@@ -1,7 +1,7 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentDocument } from '../../domain/comment.entity';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
-import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
+import { UsersRepository } from '../../../../user-accounts/users/infrastructure/users.repository';
 
 class DeleteCommentCommandDTO {
   userId: string;

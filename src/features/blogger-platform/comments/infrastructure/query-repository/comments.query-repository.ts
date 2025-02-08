@@ -12,7 +12,7 @@ import {
 import {
   UserContextDTO,
   UserOptionalContextDTO,
-} from '../../../../user-accounts/guards/dto/user-context.dto';
+} from '../../../../user-accounts/users/guards/dto/user-context.dto';
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
 import { LikeStatus } from '../../../likes/domain/dto/like-status';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';

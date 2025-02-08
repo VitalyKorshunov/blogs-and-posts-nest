@@ -1,5 +1,5 @@
 import { CommentId, CreateCommentDTO } from '../../domain/dto/comment.dto';
-import { UserDocument } from '../../../../user-accounts/domain/user.entity';
+import { UserDocument } from '../../../../user-accounts/users/domain/user.entity';
 import {
   Comment,
   CommentDocument,
@@ -7,7 +7,7 @@ import {
 } from '../../domain/comment.entity';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
-import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
+import { UsersRepository } from '../../../../user-accounts/users/infrastructure/users.repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
 

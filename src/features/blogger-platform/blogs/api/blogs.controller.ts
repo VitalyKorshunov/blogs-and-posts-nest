@@ -30,11 +30,11 @@ import { UpdateBlogCommand } from '../application/use-cases/update-blog.use-case
 import { DeleteBlogCommand } from '../application/use-cases/delete-blog.use-case';
 import { CreatePostCommand } from '../../posts/application/use-cases/create-post.use-case';
 import { ApiBasicAuth } from '@nestjs/swagger';
-import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic.guard';
+import { BasicAuthGuard } from '../../../user-accounts/users/guards/basic/basic.guard';
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
-import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
-import { ExtractUserOptionalFromRequest } from '../../../user-accounts/guards/decorators/extract-user-from-request.decorator';
-import { UserOptionalContextDTO } from '../../../user-accounts/guards/dto/user-context.dto';
+import { AccessTokenOptionalAuthGuard } from '../../../user-accounts/users/guards/bearer/access-token-optional-auth.guard';
+import { ExtractUserOptionalFromRequest } from '../../../user-accounts/users/guards/decorators/extract-user-from-request.decorator';
+import { UserOptionalContextDTO } from '../../../user-accounts/users/guards/dto/user-context.dto';
 import { PostId } from '../../posts/domain/dto/post.dto';
 
 @Controller('blogs')
@@ -68,7 +68,7 @@ export class BlogsControllers {
   }
 
   @Get(':blogId/posts')
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(AccessTokenOptionalAuthGuard)
   async getAllPostsForBlog(
     @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
     @Query() query: GetPostsQueryParamsInputDTO,

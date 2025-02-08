@@ -58,6 +58,7 @@ export class SecurityController {
     await this.commandBus.execute(
       new DeleteUserSessionByDeviceIdCommand({
         userId: refreshTokenPayload.userId,
+        lastActiveDate: refreshTokenPayload.lastActiveDate,
         deviceId: deviceId,
       }),
     );

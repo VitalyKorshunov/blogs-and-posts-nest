@@ -7,7 +7,7 @@ import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { DeletionStatus } from '../../../../../core/dto/deletion-status';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
-import { UserOptionalContextDTO } from '../../../../user-accounts/guards/dto/user-context.dto';
+import { UserOptionalContextDTO } from '../../../../user-accounts/users/guards/dto/user-context.dto';
 import { LikeStatus } from '../../../likes/domain/dto/like-status';
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
 import { GetAllPostsQueryContextDTO } from './dto/post-query.dto';

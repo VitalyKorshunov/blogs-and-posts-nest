@@ -35,55 +35,15 @@ export class SecurityRepository {
 
   async findUserSessionByDeviceId(
     deviceId: DeviceId,
+    lastActiveDate: string,
   ): Promise<SecurityDocument | null> {
     return this.SecurityModel.findOne({
       deviceId,
+      lastActiveDate: new Date(lastActiveDate),
     });
   }
 
   async save(securityModel: SecurityDocument): Promise<void> {
     await securityModel.save();
   }
-
-  // async setSecuritySessionData(
-  //   sessionData: SecurityInputModel,
-  // ): Promise<boolean> {
-  //   const { userId, ...rest } = sessionData;
-  //   const mappedSessionData: SecurityDbType = {
-  //     userId: new ObjectId(userId),
-  //     ...rest,
-  //   };
-  //
-  //   const isSecuritySessionSet = await SecurityModel.insertMany([
-  //     mappedSessionData,
-  //   ]);
-  //
-  //   return !!isSecuritySessionSet[0]._id;
-  // }
-
-  // async getSecuritySession(
-  //   securitySessionQuery: SecuritySessionSearchQueryType,
-  // ): Promise<HydratedSecurityType | null> {
-  //   return SecurityModel.findOne(securitySessionQuery);
-  // }
-
-  // async deleteSecuritySessionData(
-  //   deviceId: DeviceId,
-  //   lastActiveDate: Date,
-  // ): Promise<boolean> {
-  //   const result = await SecurityModel.deleteOne({ deviceId, lastActiveDate });
-  //
-  //   return !!result.deletedCount;
-  // }
-
-  // async updateSecuritySessionData(
-  //   securitySessionQuery: SecuritySessionSearchQueryType,
-  //   securitySessionUpdateData: SecurityUpdateType,
-  // ): Promise<boolean> {
-  //   const result = await SecurityModel.updateOne(securitySessionQuery, {
-  //     $set: securitySessionUpdateData,
-  //   });
-  //
-  //   return !!result.matchedCount;
-  // }
 }

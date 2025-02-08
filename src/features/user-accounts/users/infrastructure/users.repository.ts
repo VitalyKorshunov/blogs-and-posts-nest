@@ -7,7 +7,7 @@ import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { ObjectId } from 'mongodb';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserId } from '../domain/dto/user.dto';
-import { DeletionStatus } from '../../../core/dto/deletion-status';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 
 @Injectable()
 export class UsersRepository {
@@ -35,11 +35,21 @@ export class UsersRepository {
     if (!isUserFound) throw new NotFoundException('user not found');
   }
 
+  async checkUserFoundOrUnauthorizedError(userId: UserId): Promise<void> {
+    const isUserFound: number = await this.UserModel.countDocuments({
+      _id: new ObjectId(userId),
+      deletionStatus: DeletionStatus.NotDeleted,
+    });
+
+    if (!isUserFound) throw new UnauthorizedException('user not found');
+  }
+
   async findUserByLoginOrEmail(
     loginOrEmail: string,
   ): Promise<UserDocument | null> {
     return this.UserModel.findOne({
       $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
+      deletionStatus: DeletionStatus.NotDeleted,
     });
   }
 
@@ -48,6 +58,7 @@ export class UsersRepository {
   ): Promise<UserDocument | null> {
     const user: UserDocument | null = await this.UserModel.findOne({
       $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
+      deletionStatus: DeletionStatus.NotDeleted,
     });
 
     if (!user) throw new UnauthorizedException();
@@ -75,6 +86,7 @@ export class UsersRepository {
   ): Promise<UserDocument | null> {
     return this.UserModel.findOne({
       'emailConfirmation.confirmationCode': emailConfirmationCode,
+      deletionStatus: DeletionStatus.NotDeleted,
     });
   }
 
@@ -83,6 +95,7 @@ export class UsersRepository {
   ): Promise<UserDocument | null> {
     return this.UserModel.findOne({
       'recoveryPassword.recoveryCode': passwordRecoveryCode,
+      deletionStatus: DeletionStatus.NotDeleted,
     });
   }
 }

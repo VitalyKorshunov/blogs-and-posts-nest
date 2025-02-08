@@ -25,12 +25,13 @@ export class SecurityQueryRepository {
     return sessions.map((session) => SecurityViewDTO.mapToView(session));
   }
 
-  async isSessionByDeviceIdFoundAndNotExpired(
+  async isSessionByDeviceIdAndLastActiveDateFound(
     deviceId: DeviceId,
+    lastActiveDate: string,
   ): Promise<boolean> {
     const session = await this.SecurityModel.countDocuments({
       deviceId,
-      expireAt: { $gt: new Date() },
+      lastActiveDate: new Date(lastActiveDate),
     });
 
     return !!session;

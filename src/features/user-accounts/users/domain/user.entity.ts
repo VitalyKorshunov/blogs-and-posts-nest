@@ -10,10 +10,10 @@ import {
 } from './email-confirmation.schema';
 import { CreateUserDTO, RecoveryPasswordUserDTO } from './dto/user.dto';
 import { HydratedDocument, Model } from 'mongoose';
-import { DeletionStatus } from '../../../core/dto/deletion-status';
+import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import { BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { SETTINGS } from '../../../settings';
+import { SETTINGS } from '../../../../settings';
 
 export const userLoginConstraints = {
   minLength: 3,

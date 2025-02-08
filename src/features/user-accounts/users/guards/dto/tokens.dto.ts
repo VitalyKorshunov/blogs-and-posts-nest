@@ -1,13 +1,13 @@
 export class AccessTokenPayloadDTO {
   userId: string;
-  createdAt: number;
+  lastActiveDate: string;
   exp: number;
 }
 
 export class RefreshTokenPayloadDTO {
   userId: string;
   deviceId: string;
-  createdAt: number;
+  lastActiveDate: string;
   exp: number;
 }
 

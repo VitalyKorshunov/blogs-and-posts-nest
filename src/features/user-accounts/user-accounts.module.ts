@@ -1,36 +1,45 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './domain/user.entity';
-import { UsersController } from './api/users.controller';
-import { UsersService } from './application/users.service';
-import { UsersRepository } from './infrastructure/users.repository';
-import { UsersQueryRepository } from './infrastructure/query/users.query-repository';
-import { CryptoService } from './application/crypto.service';
-import { LocalStrategy } from './guards/local/local.strategy';
+import { User, UserSchema } from './users/domain/user.entity';
+import { UsersController } from './users/api/users.controller';
+import { UsersService } from './users/application/users.service';
+import { UsersRepository } from './users/infrastructure/users.repository';
+import { UsersQueryRepository } from './users/infrastructure/query/users.query-repository';
+import { CryptoService } from './users/application/crypto.service';
+import { LocalStrategy } from './users/guards/local/local.strategy';
 import { PassportModule } from '@nestjs/passport';
-import { AuthControllers } from './api/auth.controller';
-import { AuthQueryRepository } from './infrastructure/query/auth.query-repository';
-import { AuthService } from './application/auth.service';
-import { AccessTokenStrategy } from './guards/bearer/access-token.strategy';
+import { AuthControllers } from './users/api/auth.controller';
+import { AuthQueryRepository } from './users/infrastructure/query/auth.query-repository';
+import { AuthService } from './users/application/auth.service';
+import { AccessTokenStrategy } from './users/guards/bearer/access-token.strategy';
 import { JwtService } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { SETTINGS } from '../../settings';
-import { EmailService } from './application/email-service/email.service';
+import { EmailService } from './users/application/email-service/email.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { BasicAuthStrategy } from './guards/basic/basic.strategy';
-import { CreateUserByAdminUseCase } from './application/use-cases/create-user-by-admin-use-case';
-import { ChangeUserPasswordUseCase } from './application/use-cases/change-user-password.use-case';
-import { ConfirmUserEmailUseCase } from './application/use-cases/confirm-user-email.use-case';
-import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case';
-import { LoginUserUseCase } from './application/use-cases/login-user.use-case';
-import { RegistrationUserUseCase } from './application/use-cases/registration-user.use-case';
-import { ResendUserConfirmationEmailUseCase } from './application/use-cases/resend-user-confirmation-email.use-case';
-import { SendUserRecoveryPasswordUseCase } from './application/use-cases/send-user-recovery-password.use-case';
+import { BasicAuthStrategy } from './users/guards/basic/basic.strategy';
+import { CreateUserByAdminUseCase } from './users/application/use-cases/create-user-by-admin-use-case';
+import { ChangeUserPasswordUseCase } from './users/application/use-cases/change-user-password.use-case';
+import { ConfirmUserEmailUseCase } from './users/application/use-cases/confirm-user-email.use-case';
+import { DeleteUserUseCase } from './users/application/use-cases/delete-user.use-case';
+import { LoginUserUseCase } from './users/application/use-cases/login-user.use-case';
+import { RegistrationUserUseCase } from './users/application/use-cases/registration-user.use-case';
+import { ResendUserConfirmationEmailUseCase } from './users/application/use-cases/resend-user-confirmation-email.use-case';
+import { SendUserRecoveryPasswordUseCase } from './users/application/use-cases/send-user-recovery-password.use-case';
 import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
-} from './constants/auth-tokens.inject-constants';
-import { RefreshTokenStrategy } from './guards/cookie/refresh-token.strategy';
+} from './users/constants/auth-tokens.inject-constants';
+import { RefreshTokenStrategy } from './users/guards/cookie/refresh-token.strategy';
+import { Security, SecuritySchema } from './security/domain/security.entity';
+import { SecurityController } from './security/api/security.controller';
+import { SecurityRepository } from './security/infrastructure/security.repository';
+import { SecurityQueryRepository } from './security/infrastructure/security.query-repository';
+import { CreateSessionUseCase } from './security/application/use-cases/create-session.use-case';
+import { UpdateUserSessionUseCase } from './security/application/use-cases/update-user-session.use-case';
+import { UpdateTokensUseCase } from './users/application/use-cases/update-tokens.use-case';
+import { DeleteAllUserSessionsExpectCurrentUseCase } from './security/application/use-cases/delete-all-user-sessions-expect-current.use-case';
+import { DeleteUserSessionByDeviceIdUseCase } from './security/application/use-cases/delete-user-session-by-device-id.use-case';
 
 const services = [UsersService, AuthService];
 
@@ -43,7 +52,7 @@ const strategies = [
 
 const adapters = [CryptoService, EmailService];
 
-const useCases = [
+const userUseCases = [
   ChangeUserPasswordUseCase,
   ConfirmUserEmailUseCase,
   CreateUserByAdminUseCase,
@@ -52,17 +61,30 @@ const useCases = [
   RegistrationUserUseCase,
   ResendUserConfirmationEmailUseCase,
   SendUserRecoveryPasswordUseCase,
+  UpdateTokensUseCase,
+];
+
+const securityUseCases = [
+  CreateSessionUseCase,
+  DeleteAllUserSessionsExpectCurrentUseCase,
+  DeleteUserSessionByDeviceIdUseCase,
+  UpdateUserSessionUseCase,
 ];
 
 const repositories = [
   UsersRepository,
   UsersQueryRepository,
   AuthQueryRepository,
+  SecurityRepository,
+  SecurityQueryRepository,
 ];
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Security.name, schema: SecuritySchema },
+    ]),
     PassportModule,
     MailerModule.forRoot({
       transport: {
@@ -78,7 +100,7 @@ const repositories = [
         from: '"nest-modules" <modules@nestjs.com>',
       },
       template: {
-        dir: __dirname + '/application/email-service/templates',
+        dir: __dirname + '/users/application/email-service/templates',
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
@@ -86,12 +108,13 @@ const repositories = [
       },
     }),
   ],
-  controllers: [UsersController, AuthControllers],
+  controllers: [UsersController, AuthControllers, SecurityController],
   providers: [
     ...services,
     ...strategies,
     ...adapters,
-    ...useCases,
+    ...userUseCases,
+    ...securityUseCases,
     ...repositories,
     {
       provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,

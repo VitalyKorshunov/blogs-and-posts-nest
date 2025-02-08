@@ -7,6 +7,8 @@ import { BloggerPlatformModule } from './features/blogger-platform/blogger-platf
 import { CqrsModule } from '@nestjs/cqrs';
 import { CoreModule } from './core/core.module';
 import { CoreConfig } from './core/core.config';
+import { seconds, ThrottlerModule } from '@nestjs/throttler';
+import { SETTINGS } from './settings';
 
 @Module({
   imports: [
@@ -21,6 +23,12 @@ import { CoreConfig } from './core/core.config';
       },
       inject: [CoreConfig],
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: seconds(SETTINGS.THROTTLER.TTL_IN_SECONDS),
+        limit: SETTINGS.THROTTLER.LIMIT_REQUEST_IN_TTL,
+      },
+    ]),
     configModule,
     UserAccountsModule,
     BloggerPlatformModule,

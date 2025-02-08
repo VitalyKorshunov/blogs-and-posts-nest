@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 import { LikeStatus } from '../domain/dto/like-status';
 import { InjectModel } from '@nestjs/mongoose';
 import { LastNewestLikes, LikesAndDislikesCount } from '../domain/dto/like.dto';
-import { UserOptionalContextDTO } from '../../../user-accounts/guards/dto/user-context.dto';
+import { UserOptionalContextDTO } from '../../../user-accounts/users/guards/dto/user-context.dto';
 import { SETTINGS } from '../../../../settings';
 
 @Injectable()

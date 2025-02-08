@@ -1,4 +1,4 @@
-import { BaseSortablePaginationParams } from '../../../../core/dto/base.query-params.input-dto';
+import { BaseSortablePaginationParams } from '../../../../../core/dto/base.query-params.input-dto';
 import { UsersSortBy } from './users-sort-by';
 import { IsEnum } from 'class-validator';
 

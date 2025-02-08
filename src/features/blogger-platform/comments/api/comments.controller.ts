@@ -13,7 +13,7 @@ import { CommentsQueryRepository } from '../infrastructure/query-repository/comm
 import { CommentId } from '../domain/dto/comment.dto';
 import { CommentViewDTO } from './view-dto/comments.view-dto';
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
-import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../../../user-accounts/users/guards/bearer/access-token.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteCommentCommand } from '../application/use-cases/delete-comment.use-case';
 import {
@@ -23,15 +23,15 @@ import {
 import {
   ExtractUserFromRequest,
   ExtractUserOptionalFromRequest,
-} from '../../../user-accounts/guards/decorators/extract-user-from-request.decorator';
+} from '../../../user-accounts/users/guards/decorators/extract-user-from-request.decorator';
 import {
   UserContextDTO,
   UserOptionalContextDTO,
-} from '../../../user-accounts/guards/dto/user-context.dto';
+} from '../../../user-accounts/users/guards/dto/user-context.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UpdateCommentLikeStatusCommand } from '../application/use-cases/update-comment-like-status.use-case';
 import { UpdateCommentCommand } from '../application/use-cases/update-comment.use-case';
-import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { AccessTokenOptionalAuthGuard } from '../../../user-accounts/users/guards/bearer/access-token-optional-auth.guard';
 
 @Controller('comments')
 export class CommentsController {
@@ -41,7 +41,7 @@ export class CommentsController {
   ) {}
 
   @Put(':commentId/like-status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateCommentLikeStatus(
@@ -59,7 +59,7 @@ export class CommentsController {
   }
 
   @Put(':commentId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateComment(
@@ -77,7 +77,7 @@ export class CommentsController {
   }
 
   @Delete(':commentId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(
@@ -93,7 +93,7 @@ export class CommentsController {
   }
 
   @Get(':commentId')
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(AccessTokenOptionalAuthGuard)
   getComment(
     @Param('commentId', ObjectIdValidationPipe) commentId: CommentId,
     @ExtractUserOptionalFromRequest() user: UserOptionalContextDTO,

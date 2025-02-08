@@ -15,13 +15,13 @@ import { UsersQueryRepository } from '../infrastructure/query/users.query-reposi
 import { UserId } from '../domain/dto/user.dto';
 import { UserViewDto } from './view-dto/users.view-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
-import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { CreateUserInputDTO } from './input-dto/users.input-dto';
 import { BasicAuthGuard } from '../guards/basic/basic.guard';
 import { CreateUserByAdminCommand } from '../application/use-cases/create-user-by-admin-use-case';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteUserCommand } from '../application/use-cases/delete-user.use-case';
-import { ObjectIdValidationPipe } from '../../../core/object-id-validation-transformation.pipe';
+import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
 
 @Controller('users')
 @ApiBasicAuth()
