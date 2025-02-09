@@ -8,7 +8,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { CoreModule } from './core/core.module';
 import { CoreConfig } from './core/core.config';
 import { seconds, ThrottlerModule } from '@nestjs/throttler';
-import { SETTINGS } from './settings';
 
 @Module({
   imports: [
@@ -23,12 +22,18 @@ import { SETTINGS } from './settings';
       },
       inject: [CoreConfig],
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: seconds(SETTINGS.THROTTLER.TTL_IN_SECONDS),
-        limit: SETTINGS.THROTTLER.LIMIT_REQUEST_IN_TTL,
+    ThrottlerModule.forRootAsync({
+      imports: [CoreModule],
+      useFactory: (coreConfig: CoreConfig) => {
+        return [
+          {
+            ttl: seconds(coreConfig.ttlInSeconds),
+            limit: coreConfig.limitRequestInTtl,
+          },
+        ];
       },
-    ]),
+      inject: [CoreConfig],
+    }),
     configModule,
     UserAccountsModule,
     BloggerPlatformModule,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { SETTINGS } from '../../../../../settings';
+import { UserAccountsConfig } from '../../../user-accounts.config';
 
 interface SendEmailDTO {
   email: string;
@@ -16,7 +16,10 @@ enum TemplateName {
 
 @Injectable()
 export class EmailService {
-  constructor(private mailerService: MailerService) {}
+  constructor(
+    private mailerService: MailerService,
+    private userAccountsConfig: UserAccountsConfig,
+  ) {}
 
   registration(email: string, confirmationCode: string): void {
     const dto: SendEmailDTO = {
@@ -57,7 +60,7 @@ export class EmailService {
   private sendEmail(dto: SendEmailDTO): void {
     this.mailerService
       .sendMail({
-        from: `SomeSiteName ${SETTINGS.MAILER.USER}`,
+        from: `SomeSiteName ${this.userAccountsConfig.mailUser}`,
         to: dto.email,
         subject: dto.subject,
         template: dto.templateName,

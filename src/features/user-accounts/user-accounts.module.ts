@@ -14,7 +14,6 @@ import { AuthService } from './users/application/auth.service';
 import { AccessTokenStrategy } from './users/guards/bearer/access-token.strategy';
 import { JwtService } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { SETTINGS } from '../../settings';
 import { EmailService } from './users/application/email-service/email.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { BasicAuthStrategy } from './users/guards/basic/basic.strategy';
@@ -40,6 +39,7 @@ import { UpdateUserSessionUseCase } from './security/application/use-cases/updat
 import { UpdateTokensUseCase } from './users/application/use-cases/update-tokens.use-case';
 import { DeleteAllUserSessionsExpectCurrentUseCase } from './security/application/use-cases/delete-all-user-sessions-expect-current.use-case';
 import { DeleteUserSessionByDeviceIdUseCase } from './security/application/use-cases/delete-user-session-by-device-id.use-case';
+import { UserAccountsConfig } from './user-accounts.config';
 
 const services = [UsersService, AuthService];
 
@@ -79,6 +79,7 @@ const repositories = [
   SecurityQueryRepository,
 ];
 
+//TODO: CHECK MailerModule and UserAccountsConfig
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -86,30 +87,36 @@ const repositories = [
       { name: Security.name, schema: SecuritySchema },
     ]),
     PassportModule,
-    MailerModule.forRoot({
-      transport: {
-        host: SETTINGS.MAILER.HOST,
-        port: SETTINGS.MAILER.PORT,
-        secure: true,
-        auth: {
-          user: SETTINGS.MAILER.USER,
-          pass: SETTINGS.MAILER.PASS,
+    //TODO: Перенести в отдельный EmailModule
+    MailerModule.forRootAsync({
+      imports: [UserAccountsModule],
+      inject: [UserAccountsConfig],
+      useFactory: (userAccountsConfig: UserAccountsConfig) => ({
+        transport: {
+          host: userAccountsConfig.mailHost,
+          port: userAccountsConfig.mailPort,
+          secure: true,
+          auth: {
+            user: userAccountsConfig.mailUser,
+            pass: userAccountsConfig.mailPass,
+          },
         },
-      },
-      defaults: {
-        from: '"nest-modules" <modules@nestjs.com>',
-      },
-      template: {
-        dir: __dirname + '/users/application/email-service/templates',
-        adapter: new HandlebarsAdapter(),
-        options: {
-          strict: true,
+        defaults: {
+          from: '"nest-modules" <modules@nestjs.com>',
         },
-      },
+        template: {
+          dir: __dirname + userAccountsConfig.pathToMailTemplates,
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
     }),
   ],
   controllers: [UsersController, AuthControllers, SecurityController],
   providers: [
+    UserAccountsConfig,
     ...services,
     ...strategies,
     ...adapters,
@@ -118,31 +125,36 @@ const repositories = [
     ...repositories,
     {
       provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
-      useFactory: (): JwtService => {
+      useFactory: (userAccountsConfig: UserAccountsConfig): JwtService => {
         return new JwtService({
-          secret: SETTINGS.TOKENS.ACCESS_TOKEN.SECRET_KEY,
+          secret: userAccountsConfig.accessTokenSecret,
           signOptions: {
-            expiresIn: SETTINGS.TOKENS.ACCESS_TOKEN.LIFETIME_IN_MS,
+            expiresIn: userAccountsConfig.accessTokenLifetime,
             noTimestamp: true,
           },
         });
       },
-      inject: [],
+      inject: [UserAccountsConfig],
     },
     {
       provide: REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
-      useFactory: (): JwtService => {
+      useFactory: (userAccountsConfig: UserAccountsConfig): JwtService => {
         return new JwtService({
-          secret: SETTINGS.TOKENS.REFRESH_TOKEN.SECRET_KEY,
+          secret: userAccountsConfig.refreshTokenSecret,
           signOptions: {
-            expiresIn: SETTINGS.TOKENS.REFRESH_TOKEN.LIFETIME_IN_MS,
+            expiresIn: userAccountsConfig.refreshTokenLifetime,
             noTimestamp: true,
           },
         });
       },
-      inject: [],
+      inject: [UserAccountsConfig],
     },
   ],
-  exports: [UsersRepository, AccessTokenStrategy, RefreshTokenStrategy],
+  exports: [
+    UsersRepository,
+    AccessTokenStrategy,
+    RefreshTokenStrategy,
+    UserAccountsConfig,
+  ],
 })
 export class UserAccountsModule {}

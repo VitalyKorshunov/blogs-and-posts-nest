@@ -27,6 +27,7 @@ import { DeleteBlogUseCase } from './blogs/application/use-cases/delete-blog.use
 import { UpdateBlogUseCase } from './blogs/application/use-cases/update-blog.use-case';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { BlogIdIsExistConstraint } from './blogs/api/validation/blog-id-is-exist.decorator';
+import { BloggerPlatformConfig } from './blogger-platform.config';
 
 const blogUseCases = [CreateBlogUseCase, DeleteBlogUseCase, UpdateBlogUseCase];
 const postUseCases = [
@@ -63,6 +64,7 @@ const repositories = [
   ],
   controllers: [BlogsControllers, PostsControllers, CommentsController],
   providers: [
+    BloggerPlatformConfig,
     ...blogUseCases,
     ...postUseCases,
     ...commentUseCases,

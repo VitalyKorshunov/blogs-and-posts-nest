@@ -5,11 +5,14 @@ import { LikeStatus } from '../domain/dto/like-status';
 import { InjectModel } from '@nestjs/mongoose';
 import { LastNewestLikes, LikesAndDislikesCount } from '../domain/dto/like.dto';
 import { UserOptionalContextDTO } from '../../../user-accounts/users/guards/dto/user-context.dto';
-import { SETTINGS } from '../../../../settings';
+import { BloggerPlatformConfig } from '../../blogger-platform.config';
 
 @Injectable()
 export class LikesRepository {
-  constructor(@InjectModel(Like.name) private LikeModel: LikeModelType) {}
+  constructor(
+    @InjectModel(Like.name) private LikeModel: LikeModelType,
+    private bloggerPlatformConfig: BloggerPlatformConfig,
+  ) {}
 
   async save(likeModel: LikeDocument): Promise<void> {
     await likeModel.save();
@@ -54,7 +57,7 @@ export class LikesRepository {
       likeStatus: LikeStatus.Like,
     })
       .sort({ createdAt: 'desc' })
-      .limit(SETTINGS.LAST_NEWEST_LIKES_COUNT_FOR_POST);
+      .limit(this.bloggerPlatformConfig.lastNewestLikesCountForPost);
 
     return likes.map((like: LikeDocument): LastNewestLikes => {
       return {

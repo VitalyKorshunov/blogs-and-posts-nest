@@ -1,19 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { SETTINGS } from '../../../../../settings';
 import { AccessTokenPayloadDTO } from '../dto/tokens.dto';
+import { UserAccountsConfig } from '../../../user-accounts.config';
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(
   Strategy,
   'accessToken',
 ) {
-  constructor() {
+  constructor(private readonly userAccountsConfig: UserAccountsConfig) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: SETTINGS.TOKENS.ACCESS_TOKEN.SECRET_KEY,
+      //TODO: Дублирование secretOrKey?
+      secretOrKey: userAccountsConfig.accessTokenSecret,
     });
   }
 

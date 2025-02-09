@@ -12,7 +12,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PostLikesInfo, PostLikesInfoSchema } from './post.likes-info.schema';
-import { SETTINGS } from '../../../../settings';
 
 export const postTitleConstraints = {
   minLength: 1,
@@ -93,17 +92,18 @@ export class Post {
     this.blogName = dto.blogName;
   }
 
-  updateLikesInfo(dto: UpdatePostLikesInfoDTO): void {
+  updateLikesInfo(
+    dto: UpdatePostLikesInfoDTO,
+    lastNewestLikesCountForPost: number,
+  ): void {
     if (dto.likesCount < 0 || dto.dislikesCount < 0) {
       throw new InternalServerErrorException(
         `'likesCount' and 'dislikesCount' must be greater than or equal 0`,
       );
     }
-    if (
-      dto.lastNewestLikes.length > SETTINGS.LAST_NEWEST_LIKES_COUNT_FOR_POST
-    ) {
+    if (dto.lastNewestLikes.length > lastNewestLikesCountForPost) {
       throw new InternalServerErrorException(
-        `the length of the array should not be more than ${SETTINGS.LAST_NEWEST_LIKES_COUNT_FOR_POST}`,
+        `the length of the array should not be more than ${lastNewestLikesCountForPost}`,
       );
     }
 

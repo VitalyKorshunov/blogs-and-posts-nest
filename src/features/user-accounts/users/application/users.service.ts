@@ -4,6 +4,7 @@ import { CreateUserInputDTO } from '../api/input-dto/users.input-dto';
 import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { CryptoService } from './crypto.service';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserAccountsConfig } from '../../user-accounts.config';
 
 @Injectable()
 export class UsersService {
@@ -11,6 +12,7 @@ export class UsersService {
     @InjectModel(User.name) private UserModel: UserModelType,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
+    private userAccountsConfig: UserAccountsConfig,
   ) {}
 
   async checkLoginAndEmailAndCreateUser(
@@ -21,11 +23,14 @@ export class UsersService {
 
     const passHash = await this.cryptoService.generateHash(dto.password);
 
-    return this.UserModel.createUser({
-      login: dto.login,
-      email: dto.email,
-      passwordHash: passHash,
-    });
+    return this.UserModel.createUser(
+      {
+        login: dto.login,
+        email: dto.email,
+        passwordHash: passHash,
+      },
+      this.userAccountsConfig.emailConfirmationCodeExpiresInHours,
+    );
   }
 
   async validateLogin(login: string): Promise<void> {

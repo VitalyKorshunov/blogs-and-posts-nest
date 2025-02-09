@@ -1,4 +1,10 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  NotEquals,
+} from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 import { configValidationUtility } from './config-validation.utility';
 import { Injectable } from '@nestjs/common';
@@ -12,6 +18,9 @@ export enum Environment {
 
 @Injectable()
 export class CoreConfig {
+  @NotEquals(0, {
+    message: 'Env variable PORT must be > 0, example: 5000',
+  })
   @IsNumber(
     {},
     {
@@ -48,6 +57,32 @@ export class CoreConfig {
   includeTestingModule: boolean = configValidationUtility.convertToBoolean(
     this.configService.get('INCLUDE_TESTING_MODULE'),
   ) as boolean;
+
+  @NotEquals(0, {
+    message: 'Env variable LIMIT_REQUEST_IN_TTL must be > 0, example: 5',
+  })
+  @IsNumber(
+    {},
+    {
+      message: 'Set Env variable LIMIT_REQUEST_IN_TTL, example: 5',
+    },
+  )
+  limitRequestInTtl: number = Number(
+    this.configService.get<string>('LIMIT_REQUEST_IN_TTL'),
+  );
+
+  @NotEquals(0, {
+    message: 'Env variable TTL_IN_SECONDS must be > 0, example: 10',
+  })
+  @IsNumber(
+    {},
+    {
+      message: 'Set Env variable TTL_IN_SECONDS, example: 10',
+    },
+  )
+  ttlInSeconds: number = Number(
+    this.configService.get<string>('TTL_IN_SECONDS'),
+  );
 
   constructor(private configService: ConfigService<any, true>) {
     console.log('CoreConfig created');

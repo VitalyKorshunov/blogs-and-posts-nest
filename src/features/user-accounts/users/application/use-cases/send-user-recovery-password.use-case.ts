@@ -3,6 +3,7 @@ import { PasswordRecoveryInputDTO } from '../../api/input-dto/users.input-dto';
 import { UserDocument } from '../../domain/user.entity';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailService } from '../email-service/email.service';
+import { UserAccountsConfig } from '../../../user-accounts.config';
 
 export class SendUserRecoveryPasswordCommand extends Command<void> {
   constructor(public dto: PasswordRecoveryInputDTO) {
@@ -17,6 +18,7 @@ export class SendUserRecoveryPasswordUseCase
   constructor(
     private usersRepository: UsersRepository,
     private emailService: EmailService,
+    private userAccountsConfig: UserAccountsConfig,
   ) {}
 
   async execute({ dto }: SendUserRecoveryPasswordCommand): Promise<void> {
@@ -27,7 +29,9 @@ export class SendUserRecoveryPasswordUseCase
       return;
     }
 
-    user.changePassRecoveryCode();
+    user.changePassRecoveryCode(
+      this.userAccountsConfig.passwordRecoveryCodeExpiresInHours,
+    );
 
     this.emailService.passwordRecovery(user.email, user.getPassRecoveryCode());
   }

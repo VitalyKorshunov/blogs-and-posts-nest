@@ -17,6 +17,7 @@ import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
 import { UsersRepository } from '../../../../user-accounts/users/infrastructure/users.repository';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { LikeStatus } from '../../../likes/domain/dto/like-status';
+import { BloggerPlatformConfig } from '../../../blogger-platform.config';
 
 class UpdatePostLikeStatusCommandDTO {
   postId: string;
@@ -39,6 +40,7 @@ export class UpdatePostLikeStatusUseCase
     private likesRepository: LikesRepository,
     private postsRepository: PostsRepository,
     private usersRepository: UsersRepository,
+    private bloggerPlatformConfig: BloggerPlatformConfig,
   ) {}
 
   async execute({ dto }: UpdatePostLikeStatusCommand): Promise<void> {
@@ -78,7 +80,10 @@ export class UpdatePostLikeStatusUseCase
       dislikesCount: likesAndDislikesCount.dislikesCount,
       lastNewestLikes: lastThreeNewestLikes,
     };
-    post.updateLikesInfo(updatePostLikesInfoDTO);
+    post.updateLikesInfo(
+      updatePostLikesInfoDTO,
+      this.bloggerPlatformConfig.lastNewestLikesCountForPost,
+    );
 
     await this.postsRepository.save(post);
   }

@@ -13,7 +13,6 @@ import { HydratedDocument, Model } from 'mongoose';
 import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import { BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { SETTINGS } from '../../../../settings';
 
 export const userLoginConstraints = {
   minLength: 3,
@@ -64,7 +63,10 @@ export class User {
   @Prop({ type: Date, default: null })
   deletedAt: Date | null;
 
-  static createUser(dto: CreateUserDTO): UserDocument {
+  static createUser(
+    dto: CreateUserDTO,
+    emailConfirmationCodeLifetimeInHours: number,
+  ): UserDocument {
     const user = new this();
     user.login = dto.login;
     user.email = dto.email;
@@ -75,7 +77,7 @@ export class User {
     };
     user.emailConfirmation = {
       expirationDate: add(new Date(), {
-        hours: SETTINGS.USER.EMAIL_CONFIRMATION_CODE_EXPIRES_IN_HOURS,
+        hours: emailConfirmationCodeLifetimeInHours,
       }),
       confirmationCode: randomUUID(),
       isConfirmed: false,
@@ -123,9 +125,9 @@ export class User {
     return this.recoveryPassword.expirationDate < new Date();
   }
 
-  changePassRecoveryCode(): void {
+  changePassRecoveryCode(passwordRecoveryCodeLifetimeInHours: number): void {
     this.recoveryPassword.expirationDate = add(new Date(), {
-      hours: SETTINGS.USER.PASSWORD_RECOVERY_CODE_EXPIRES_IN_HOURS,
+      hours: passwordRecoveryCodeLifetimeInHours,
     });
     this.recoveryPassword.recoveryCode = randomUUID();
   }
