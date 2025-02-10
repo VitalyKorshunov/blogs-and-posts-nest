@@ -13,7 +13,6 @@ export class AccessTokenStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      //TODO: Дублирование secretOrKey?
       secretOrKey: userAccountsConfig.accessTokenSecret,
     });
   }
