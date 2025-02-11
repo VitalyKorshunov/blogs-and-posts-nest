@@ -8,11 +8,22 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { CoreModule } from './core/core.module';
 import { CoreConfig } from './core/core.config';
 import { seconds, ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
     CoreModule,
     CqrsModule.forRoot(),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5433,
+      username: 'postgres',
+      password: '123',
+      database: 'BloggerPlatform',
+      autoLoadEntities: false,
+      synchronize: false,
+    }),
     MongooseModule.forRootAsync({
       imports: [CoreModule],
       useFactory: (coreConfig: CoreConfig) => {
