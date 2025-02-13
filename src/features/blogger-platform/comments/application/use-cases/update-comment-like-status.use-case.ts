@@ -1,6 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentDocument } from '../../domain/comment.entity';
-import { UserDocument } from '../../../../user-accounts/users/domain/user.entity';
+import { User } from '../../../../user-accounts/users/domain/user.entity';
 import {
   Like,
   LikeDocument,
@@ -46,8 +46,9 @@ export class UpdateCommentLikeStatusUseCase
         dto.commentId,
       );
 
-    const user: UserDocument =
-      await this.usersRepository.getUserByIdOrNotFoundError(dto.userId);
+    const user: User = await this.usersRepository.getUserByIdOrNotFoundError(
+      dto.userId,
+    );
 
     let like: LikeDocument | null = await this.likesRepository.findLike(
       dto.commentId,

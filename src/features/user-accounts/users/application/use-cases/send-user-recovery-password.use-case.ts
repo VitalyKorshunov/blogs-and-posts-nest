@@ -1,6 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PasswordRecoveryInputDTO } from '../../api/input-dto/users.input-dto';
-import { UserDocument } from '../../domain/user.entity';
+import { User } from '../../domain/user.entity';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailService } from '../email-service/email.service';
 import { UserAccountsConfig } from '../../../user-accounts.config';
@@ -22,8 +22,9 @@ export class SendUserRecoveryPasswordUseCase
   ) {}
 
   async execute({ dto }: SendUserRecoveryPasswordCommand): Promise<void> {
-    const user: UserDocument | null =
-      await this.usersRepository.findUserByLoginOrEmail(dto.email);
+    const user: User | null = await this.usersRepository.findUserByLoginOrEmail(
+      dto.email,
+    );
 
     if (!user) {
       return;

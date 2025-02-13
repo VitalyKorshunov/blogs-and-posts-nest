@@ -1,6 +1,6 @@
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { UserId } from '../../domain/dto/user.dto';
-import { UserDocument } from '../../domain/user.entity';
+import { User } from '../../domain/user.entity';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 export class DeleteUserCommand {
@@ -14,9 +14,9 @@ export class DeleteUserUseCase
   constructor(private usersRepository: UsersRepository) {}
 
   async execute({ userId }: DeleteUserCommand): Promise<void> {
-    const user: UserDocument =
+    const user: User =
       await this.usersRepository.getUserByIdOrNotFoundError(userId);
     user.permanentDelete();
-    await this.usersRepository.save(user);
+    await this.usersRepository.saveChange(user);
   }
 }

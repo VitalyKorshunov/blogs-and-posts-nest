@@ -1,5 +1,5 @@
 import { CommentId, CreateCommentDTO } from '../../domain/dto/comment.dto';
-import { UserDocument } from '../../../../user-accounts/users/domain/user.entity';
+import { User } from '../../../../user-accounts/users/domain/user.entity';
 import {
   Comment,
   CommentDocument,
@@ -37,8 +37,9 @@ export class CreateCommentUseCase
   async execute({ dto }: CreateCommentCommand): Promise<CommentId> {
     await this.postsRepository.checkPostFoundOrNotFoundError(dto.postId);
 
-    const user: UserDocument =
-      await this.usersRepository.getUserByIdOrNotFoundError(dto.userId);
+    const user: User = await this.usersRepository.getUserByIdOrNotFoundError(
+      dto.userId,
+    );
 
     const createCommentDTO: CreateCommentDTO = {
       content: dto.content,

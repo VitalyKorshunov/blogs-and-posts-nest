@@ -1,15 +1,7 @@
 import { add } from 'date-fns';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import {
-  RecoveryPassword,
-  RecoveryPasswordSchema,
-} from './recovery-password.schema';
-import {
-  EmailConfirmation,
-  EmailConfirmationSchema,
-} from './email-confirmation.schema';
+import { RecoveryPassword } from './recovery-password.schema';
+import { EmailConfirmation } from './email-confirmation.schema';
 import { CreateUserDTO, RecoveryPasswordUserDTO } from './dto/user.dto';
-import { HydratedDocument, Model } from 'mongoose';
 import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import { BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
@@ -29,44 +21,31 @@ export const userEmailConstraints = {
   match: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
 };
 
-@Schema({ timestamps: true })
 export class User {
-  @Prop({
-    type: String,
-    required: true,
-    unique: true,
-    ...userLoginConstraints,
-  })
+  id: string;
+
   login: string;
 
-  @Prop({ type: String, required: true, unique: true, ...userEmailConstraints })
   email: string;
 
-  @Prop({ type: String, required: true })
   passHash: string;
 
-  @Prop({ type: RecoveryPasswordSchema, required: true })
   recoveryPassword: RecoveryPassword;
 
-  @Prop({ type: EmailConfirmationSchema, required: true })
   emailConfirmation: EmailConfirmation;
 
-  @Prop({ type: Date })
   createdAt: Date;
 
-  @Prop({ type: Date })
   updatedAt: Date;
 
-  @Prop({ enum: DeletionStatus, required: true })
   deletionStatus: DeletionStatus;
 
-  @Prop({ type: Date, default: null })
   deletedAt: Date | null;
 
   static createUser(
     dto: CreateUserDTO,
     emailConfirmationCodeLifetimeInHours: number,
-  ): UserDocument {
+  ): User {
     const user = new this();
     user.login = dto.login;
     user.email = dto.email;
@@ -84,8 +63,16 @@ export class User {
     };
     user.deletionStatus = DeletionStatus.NotDeleted;
     user.deletedAt = null;
+    user.createdAt = new Date();
+    user.updatedAt = new Date();
 
-    return user as UserDocument;
+    return user;
+  }
+
+  static restoreUserFromDB(data: User): User {
+    const user = new this();
+    Object.assign(user, data);
+    return user;
   }
 
   canBeConfirmed(): boolean {
@@ -163,10 +150,10 @@ export class User {
   // }
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+// export const UserSchema = SchemaFactory.createForClass(User);
 
-UserSchema.loadClass(User);
+// UserSchema.loadClass(User);
 
-export type UserDocument = HydratedDocument<User>;
-
-export type UserModelType = Model<UserDocument> & typeof User;
+// export type UserDocument = HydratedDocument<User>;
+//
+// export type UserModelType = Model<UserDocument> & typeof User;

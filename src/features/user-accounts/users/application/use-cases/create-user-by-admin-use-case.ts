@@ -1,4 +1,4 @@
-import { UserDocument } from '../../domain/user.entity';
+import { User } from '../../domain/user.entity';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { CreateUserInputDTO } from '../../api/input-dto/users.input-dto';
 import { UserId } from '../../domain/dto/user.dto';
@@ -21,13 +21,11 @@ export class CreateUserByAdminUseCase
   ) {}
 
   async execute({ dto }: CreateUserByAdminCommand): Promise<UserId> {
-    const user: UserDocument =
+    const user: User =
       await this.usersService.checkLoginAndEmailAndCreateUser(dto);
 
     user.confirmEmail(user.getEmailConfirmationCode());
 
-    await this.usersRepository.save(user);
-
-    return user._id.toString();
+    return await this.usersRepository.createUser(user);
   }
 }
