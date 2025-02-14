@@ -84,6 +84,37 @@ export class CoreConfig {
     this.configService.get<string>('TTL_IN_SECONDS'),
   );
 
+  @IsNotEmpty({ message: 'Set Env variable PG_HOST, example: localhost' })
+  pgHost: string = this.configService.get<string>('PG_HOST');
+
+  @NotEquals(0, {
+    message: 'Env variable PG_PORT must be > 0, example: 5432',
+  })
+  @IsNumber(
+    {},
+    {
+      message: 'Set Env variable PG_PORT, example: 5432',
+    },
+  )
+  pgPort: number = Number(this.configService.get('PG_PORT'));
+
+  @IsNotEmpty({ message: 'Set Env variable PG_USERNAME, example: localhost' })
+  pgUsername: string = this.configService.get<string>('PG_USERNAME');
+
+  @IsNotEmpty({ message: 'Set Env variable PG_PASSWORD, example: localhost' })
+  pgPassword: string = this.configService.get<string>('PG_PASSWORD');
+
+  @IsNotEmpty({ message: 'Set Env variable PG_DATABASE, example: localhost' })
+  pgDatabase: string = this.configService.get<string>('PG_DATABASE');
+
+  @IsNotEmpty({
+    message:
+      'Set Env variable PG_SSL_ENABLE, example: true, available values: true, false, 1, 0 0',
+  })
+  pgSslEnable: boolean = configValidationUtility.convertToBoolean(
+    this.configService.get('PG_SSL_ENABLE'),
+  ) as boolean;
+
   constructor(private configService: ConfigService<any, true>) {
     console.log('CoreConfig created');
     configValidationUtility.validateConfig(this);

@@ -14,16 +14,23 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     CoreModule,
     CqrsModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5433,
-      username: 'postgres',
-      password: '123',
-      database: 'BloggerPlatform',
-      autoLoadEntities: false,
-      synchronize: false,
-      logging: true,
+    TypeOrmModule.forRootAsync({
+      imports: [CoreModule],
+      inject: [CoreConfig],
+      useFactory: (coreConfig: CoreConfig) => {
+        return {
+          type: 'postgres',
+          host: coreConfig.pgHost,
+          port: coreConfig.pgPort,
+          username: coreConfig.pgUsername,
+          password: coreConfig.pgPassword,
+          database: coreConfig.pgDatabase,
+          ssl: coreConfig.pgSslEnable,
+          autoLoadEntities: false,
+          synchronize: false,
+          logging: true,
+        };
+      },
     }),
     MongooseModule.forRootAsync({
       imports: [CoreModule],

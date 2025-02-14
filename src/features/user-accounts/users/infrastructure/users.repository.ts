@@ -11,30 +11,30 @@ export class UsersRepository {
 
   async isUserFoundByEmailOrLogin(loginOrEmail: string): Promise<boolean> {
     const queryToDb = loginOrEmail.includes('@') ? 'email' : 'login';
-
-    const isUserFound: number = await this.dataSource.query(
+    const isUserFound = await this.dataSource.query(
       `
-          SELECT COUNT(*)
+          SELECT COUNT(*) > 0 AS "isFound"
           FROM users
-          WHERE $1 = $2
+          WHERE ${queryToDb} = $1
       `,
-      [queryToDb, loginOrEmail, DeletionStatus.NotDeleted],
+      [loginOrEmail],
     );
-    return !!isUserFound;
+
+    return isUserFound[0].isFound;
   }
 
   async checkUserFoundOrNotFoundError(userId: UserId): Promise<void> {
-    const isUserFound: number = await this.dataSource.query(
+    const isUserFound = await this.dataSource.query(
       `
-          SELECT COUNT(*)
+          SELECT COUNT(*) > 0 AS "isFound"
           FROM users
           WHERE id = $1
-            AND 'deletionStatus' = $2
+            AND "deletionStatus" = $2
       `,
       [userId, DeletionStatus.NotDeleted],
     );
 
-    if (!isUserFound) throw new NotFoundException('user not found');
+    if (!isUserFound[0].isFound) throw new NotFoundException('user not found');
   }
 
   async findUserByLoginOrEmail(loginOrEmail: string): Promise<User | null> {
@@ -48,15 +48,15 @@ export class UsersRepository {
                  u."deletedAt",
                  u."createdAt",
                  u."updatedAt",
-                 rp."expirationDate" as "expPassDate",
+                 rp."expirationPassDate",
                  rp."recoveryCode",
-                 ec."expirationDate" as "expEmailDate",
+                 ec."expirationEmailDate",
                  ec."confirmationCode",
                  ec."isConfirmed"
           FROM (SELECT *
                 FROM users
                 WHERE (login = $1 OR email = $1)
-                  AND deletionStatus = $2) as u
+                  AND "deletionStatus" = $2) as u
 
                    LEFT JOIN "recoveryPassword" as rp
                              ON rp."userId" = u.id
@@ -80,15 +80,15 @@ export class UsersRepository {
                  u."deletedAt",
                  u."createdAt",
                  u."updatedAt",
-                 rp."expirationDate" as "expPassDate",
+                 rp."expirationPassDate",
                  rp."recoveryCode",
-                 ec."expirationDate" as "expEmailDate",
+                 ec."expirationEmailDate",
                  ec."confirmationCode",
                  ec."isConfirmed"
           FROM (SELECT *
                 FROM users
                 WHERE id = $1
-                  AND deletionStatus = $2) as u
+                  AND "deletionStatus" = $2) as u
 
                    LEFT JOIN "recoveryPassword" as rp
                              ON rp."userId" = u.id
@@ -99,6 +99,9 @@ export class UsersRepository {
     );
 
     if (!result.length) throw new NotFoundException('user not found');
+
+    console.log(typeof result[0].createdAt);
+    console.log(typeof result[0].deletionStatus);
 
     return User.restoreUserFromDB(result[0]);
   }
@@ -166,7 +169,7 @@ export class UsersRepository {
                 RETURNING id
                 ), ec AS (
             INSERT
-            INTO "emailConfirmation"("expirationDate",
+            INTO "emailConfirmation"("expirationEmailDate",
                                      "confirmationCode",
                                      "isConfirmed",
                                      "userId")
@@ -175,7 +178,7 @@ export class UsersRepository {
                 RETURNING "userId"
                 ), rp AS (
                 INSERT
-            INTO "recoveryPassword"("expirationDate",
+            INTO "recoveryPassword"("expirationPassDate",
                                     "recoveryCode",
                                     "userId")
                 SELECT $8, $9, ec."userId" 
@@ -195,9 +198,9 @@ export class UsersRepository {
           user.updatedAt, // $5
           user.deletedAt, // $6
           user.deletionStatus, // $7
-          user.recoveryPassword.expirationDate, // $8
+          user.recoveryPassword.expirationPassDate, // $8
           user.recoveryPassword.recoveryCode, // $9
-          user.emailConfirmation.expirationDate, // $10
+          user.emailConfirmation.expirationEmailDate, // $10
           user.emailConfirmation.confirmationCode, // $11
           user.emailConfirmation.isConfirmed, // $12
         ],
@@ -213,22 +216,22 @@ export class UsersRepository {
     try {
       await this.dataSource.query(
         `
-            UPDATE users
+            WITH first AS (UPDATE users
             SET login            = $1,
                 email            = $2,
                 "passHash"       = $3,
                 "updatedAt"      = $4,
                 "deletedAt"      = $5,
                 "deletionStatus" = $6
-            WHERE id = $12;
+            WHERE id = $12), second AS
 
-            UPDATE recoveryPassword
-            SET "expirationDate" = $7,
+            (UPDATE "recoveryPassword"
+            SET "expirationPassDate" = $7,
                 "recoveryCode"   = $8
-            WHERE "userId" = $12;
+            WHERE "userId" = $12)
 
             UPDATE "emailConfirmation"
-            SET "expirationDate"   = $9,
+            SET "expirationEmailDate"   = $9,
                 "confirmationCode" = $10,
                 "isConfirmed"      = $11
             WHERE "userId" = $12;
@@ -241,15 +244,16 @@ export class UsersRepository {
           user.updatedAt, // $4
           user.deletedAt, // $5
           user.deletionStatus, // $6
-          user.recoveryPassword.expirationDate, // $7
+          user.recoveryPassword.expirationPassDate, // $7
           user.recoveryPassword.recoveryCode, // $8
-          user.emailConfirmation.expirationDate, // $9
+          user.emailConfirmation.expirationEmailDate, // $9
           user.emailConfirmation.confirmationCode, // $10
           user.emailConfirmation.isConfirmed, // $11
           user.id, // $12
         ],
       );
     } catch (e) {
+      console.log(e);
       throw new Error(e);
     }
   }

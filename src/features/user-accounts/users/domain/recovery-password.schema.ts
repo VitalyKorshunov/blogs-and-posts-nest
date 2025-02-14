@@ -1,5 +1,5 @@
 export class RecoveryPassword {
-  expirationDate: Date;
+  expirationPassDate: Date;
 
   recoveryCode: string;
 }
