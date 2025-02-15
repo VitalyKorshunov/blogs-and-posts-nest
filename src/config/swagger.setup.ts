@@ -10,6 +10,7 @@ export function swaggerSetup(app: INestApplication) {
     .addTag('Blogs-And-Posts')
     .addBearerAuth()
     .addBasicAuth()
+    .addCookieAuth('refreshToken')
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

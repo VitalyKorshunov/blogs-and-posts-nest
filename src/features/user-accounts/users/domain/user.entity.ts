@@ -128,10 +128,12 @@ export class User {
     return this.emailConfirmation.isConfirmed;
   }
 
-  changeEmailConfirmationCode(): void {
+  changeEmailConfirmationCode(
+    emailConfirmationCodeLifetimeInHours: number,
+  ): void {
     if (this.isEmailConfirmed()) throw new Error('email already confirm');
     this.emailConfirmation.expirationEmailDate = add(new Date(), {
-      minutes: 10,
+      minutes: emailConfirmationCodeLifetimeInHours,
     });
     this.emailConfirmation.confirmationCode = randomUUID();
   }

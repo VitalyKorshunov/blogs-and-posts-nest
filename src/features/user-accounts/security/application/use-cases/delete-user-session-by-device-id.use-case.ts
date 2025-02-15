@@ -2,8 +2,8 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeviceId } from '../../domain/dto/security.dto';
 import { UserId } from '../../../users/domain/dto/user.dto';
 import { SecurityRepository } from '../../infrastructure/security.repository';
-import { SecurityDocument } from '../../domain/security.entity';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Security } from '../../domain/security.entity';
 
 class DeleteUserSessionByDeviceIdCommandDTO {
   userId: UserId;
@@ -24,11 +24,8 @@ export class DeleteUserSessionByDeviceIdUseCase
   constructor(private securityRepository: SecurityRepository) {}
 
   async execute({ dto }: DeleteUserSessionByDeviceIdCommand): Promise<void> {
-    const session: SecurityDocument | null =
-      await this.securityRepository.findUserSessionByDeviceId(
-        dto.deviceId,
-        dto.lastActiveDate,
-      );
+    const session: Security | null =
+      await this.securityRepository.findUserSessionByDeviceId(dto.deviceId);
 
     if (!session) throw new NotFoundException('session not found');
 

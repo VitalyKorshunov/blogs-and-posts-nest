@@ -107,12 +107,14 @@ export class UsersQueryRepository {
       `
           WITH "usersTotalCount" AS (SELECT COUNT(*) AS count
                                      FROM users
-                                     WHERE "deletionStatus" = $3)
+                                     WHERE (login ILIKE $1
+                                       OR email ILIKE $2)
+                                       AND "deletionStatus" = $3)
           SELECT users.*, "usersTotalCount".count AS "usersTotalCount"
           FROM users,
                "usersTotalCount"
-          WHERE login ILIKE $1
-            AND email ILIKE $2
+          WHERE (login ILIKE $1
+            OR email ILIKE $2)
             AND "deletionStatus" = $3
           ORDER BY "${query.sortBy}" ${query.sortDirection}
           LIMIT $4 OFFSET $5

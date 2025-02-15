@@ -16,7 +16,9 @@ import { CommandBus } from '@nestjs/cqrs';
 import { DeleteAllUserSessionsExpectCurrentCommand } from '../application/use-cases/delete-all-user-sessions-expect-current.use-case';
 import { DeleteUserSessionByDeviceIdCommand } from '../application/use-cases/delete-user-session-by-device-id.use-case';
 import { DeviceId } from '../domain/dto/security.dto';
+import { ApiCookieAuth } from '@nestjs/swagger';
 
+@ApiCookieAuth()
 @Controller('security')
 export class SecurityController {
   constructor(

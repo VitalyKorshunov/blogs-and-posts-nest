@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UsersController } from './users/api/users.controller';
 import { UsersService } from './users/application/users.service';
 import { UsersRepository } from './users/infrastructure/users.repository';
@@ -29,7 +28,6 @@ import {
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from './users/constants/auth-tokens.inject-constants';
 import { RefreshTokenStrategy } from './users/guards/cookie/refresh-token.strategy';
-import { Security, SecuritySchema } from './security/domain/security.entity';
 import { SecurityController } from './security/api/security.controller';
 import { SecurityRepository } from './security/infrastructure/security.repository';
 import { SecurityQueryRepository } from './security/infrastructure/security.query-repository';
@@ -81,9 +79,6 @@ const repositories = [
 //TODO: CHECK MailerModule and UserAccountsConfig
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Security.name, schema: SecuritySchema },
-    ]),
     PassportModule,
     //TODO: Перенести в отдельный EmailModule
     MailerModule.forRootAsync({
