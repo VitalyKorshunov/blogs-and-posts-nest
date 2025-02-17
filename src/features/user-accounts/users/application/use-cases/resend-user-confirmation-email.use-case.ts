@@ -48,7 +48,7 @@ export class ResendUserConfirmationEmailUseCase
     user.changeEmailConfirmationCode(
       this.userAccountsConfig.emailConfirmationCodeExpiresInHours,
     );
-    await this.usersRepository.saveChange(user);
+    await this.usersRepository.updateUser(user);
     this.emailService.registrationEmailResending(
       user.email,
       user.getEmailConfirmationCode(),

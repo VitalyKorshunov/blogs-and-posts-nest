@@ -38,6 +38,6 @@ export class ConfirmUserEmailUseCase
 
     user.confirmEmail(dto.code);
 
-    await this.usersRepository.saveChange(user);
+    await this.usersRepository.updateUser(user);
   }
 }

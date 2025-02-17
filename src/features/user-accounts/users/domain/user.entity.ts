@@ -122,6 +122,8 @@ export class User {
 
     this.emailConfirmation.isConfirmed = true;
     this.emailConfirmation.expirationEmailDate = new Date();
+
+    this.updatedAt = new Date();
   }
 
   isEmailConfirmed(): boolean {
@@ -136,6 +138,8 @@ export class User {
       minutes: emailConfirmationCodeLifetimeInHours,
     });
     this.emailConfirmation.confirmationCode = randomUUID();
+
+    this.updatedAt = new Date();
   }
 
   getEmailConfirmationCode(): string {
@@ -151,6 +155,8 @@ export class User {
       hours: passwordRecoveryCodeLifetimeInHours,
     });
     this.recoveryPassword.recoveryCode = randomUUID();
+
+    this.updatedAt = new Date();
   }
 
   getPassRecoveryCode(): string {
@@ -165,6 +171,8 @@ export class User {
 
     this.passHash = dto.newPassHash;
     this.recoveryPassword.expirationPassDate = new Date();
+
+    this.updatedAt = new Date();
   }
 
   getPassHash(): string {
@@ -177,6 +185,8 @@ export class User {
 
     this.deletionStatus = DeletionStatus.PermanentDeleted;
     this.deletedAt = new Date();
+
+    this.updatedAt = new Date();
   }
 
   // getId(): UserId {

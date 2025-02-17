@@ -6,7 +6,6 @@ import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query-reposit
 import { PostsRepository } from './posts/infrastructure/posts.repository';
 import { PostsQueryRepository } from './posts/infrastructure/query-repository/posts.query-repository';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { Post, PostSchema } from './posts/domain/post.entity';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
 import { Like, LikeSchema } from './likes/domain/like.entity';
@@ -55,7 +54,6 @@ const repositories = [
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: Like.name, schema: LikeSchema },

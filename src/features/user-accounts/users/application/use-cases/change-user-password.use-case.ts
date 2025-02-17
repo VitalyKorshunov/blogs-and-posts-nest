@@ -49,6 +49,6 @@ export class ChangeUserPasswordUseCase
       newPassHash: newPassHash,
     });
 
-    await this.usersRepository.saveChange(user);
+    await this.usersRepository.updateUser(user);
   }
 }

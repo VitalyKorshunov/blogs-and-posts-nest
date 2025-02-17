@@ -23,26 +23,25 @@ export class TestingController {
 
     await this.dataSource.query(
       `
+DO $$
+BEGIN
+
           DELETE
-          FROM security
-      `,
-    );
-    await this.dataSource.query(
-      `
+          FROM security;
+          
           DELETE
           FROM "emailConfirmation";
-      `,
-    );
-    await this.dataSource.query(
-      `
+          
           DELETE
           FROM "recoveryPassword";
-      `,
-    );
-    await this.dataSource.query(
-      `
+          
           DELETE
           FROM "users";
+          
+          DELETE
+          FROM "blogs";
+
+END $$
       `,
     );
 

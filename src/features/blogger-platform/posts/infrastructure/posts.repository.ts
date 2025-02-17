@@ -3,15 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument, PostModelType } from '../domain/post.entity';
 import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import { PostId } from '../domain/dto/post.dto';
-import { Blog, BlogModelType } from '../../blogs/domain/blog.entity';
 import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class PostsRepository {
-  constructor(
-    @InjectModel(Post.name) private PostModel: PostModelType,
-    @InjectModel(Blog.name) private BlogModel: BlogModelType,
-  ) {}
+  constructor(@InjectModel(Post.name) private PostModel: PostModelType) {}
 
   async getPostByIdOrNotFoundError(postId: PostId): Promise<PostDocument> {
     const post = await this.PostModel.findOne({

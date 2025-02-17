@@ -14,7 +14,7 @@ export class BlogIdIsExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly blogsRepository: BlogsRepository) {}
 
   async validate(value: any, args: ValidationArguments) {
-    return await this.blogsRepository.isBlogIdExist(value);
+    return await this.blogsRepository.isBlogByIdAndNotDeletedExist(value);
   }
 
   defaultMessage(validationArguments?: ValidationArguments): string {
