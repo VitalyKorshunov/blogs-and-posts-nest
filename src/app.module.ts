@@ -23,20 +23,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       database: 'BloggerPlatform',
       autoLoadEntities: false,
       synchronize: false,
-      logging: true,
     }),
     MongooseModule.forRootAsync({
       imports: [CoreModule],
-      inject: [CoreConfig],
       useFactory: (coreConfig: CoreConfig) => {
         return {
           uri: coreConfig.mongoURI,
         };
       },
+      inject: [CoreConfig],
     }),
     ThrottlerModule.forRootAsync({
       imports: [CoreModule],
-      inject: [CoreConfig],
       useFactory: (coreConfig: CoreConfig) => {
         return [
           {
@@ -45,6 +43,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           },
         ];
       },
+      inject: [CoreConfig],
     }),
     configModule,
     UserAccountsModule,

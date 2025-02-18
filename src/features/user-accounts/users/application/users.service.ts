@@ -1,14 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { CreateUserInputDTO } from '../api/input-dto/users.input-dto';
-import { User } from '../domain/user.entity';
+import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { CryptoService } from './crypto.service';
+import { InjectModel } from '@nestjs/mongoose';
 import { UserAccountsConfig } from '../../user-accounts.config';
 
 @Injectable()
 export class UsersService {
   constructor(
-    // @InjectModel(User.name) private UserModel: UserModelType,
+    @InjectModel(User.name) private UserModel: UserModelType,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
     private userAccountsConfig: UserAccountsConfig,
@@ -16,13 +17,13 @@ export class UsersService {
 
   async checkLoginAndEmailAndCreateUser(
     dto: CreateUserInputDTO,
-  ): Promise<User> {
+  ): Promise<UserDocument> {
     await this.validateLogin(dto.login);
     await this.validateEmail(dto.email);
 
     const passHash = await this.cryptoService.generateHash(dto.password);
 
-    return User.createUser(
+    return this.UserModel.createUser(
       {
         login: dto.login,
         email: dto.email,

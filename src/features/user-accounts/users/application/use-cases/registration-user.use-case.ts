@@ -2,7 +2,7 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserId } from '../../domain/dto/user.dto';
 import { CreateUserInputDTO } from '../../api/input-dto/users.input-dto';
 import { UsersService } from '../users.service';
-import { User } from '../../domain/user.entity';
+import { UserDocument } from '../../domain/user.entity';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailService } from '../email-service/email.service';
 
@@ -23,13 +23,13 @@ export class RegistrationUserUseCase
   ) {}
 
   async execute({ dto }: RegistrationUserCommand): Promise<UserId> {
-    const user: User =
+    const user: UserDocument =
       await this.usersService.checkLoginAndEmailAndCreateUser(dto);
 
-    const userId: UserId = await this.usersRepository.createUser(user);
+    await this.usersRepository.save(user);
 
     this.emailService.registration(dto.email, user.getEmailConfirmationCode());
 
-    return userId;
+    return user._id.toString();
   }
 }

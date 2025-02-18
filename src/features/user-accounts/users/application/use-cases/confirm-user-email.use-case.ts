@@ -1,6 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ConfirmationCodeInputDTO } from '../../api/input-dto/users.input-dto';
-import { User } from '../../domain/user.entity';
+import { UserDocument } from '../../domain/user.entity';
 import { BadRequestException } from '@nestjs/common';
 import { UsersRepository } from '../../infrastructure/users.repository';
 
@@ -17,7 +17,7 @@ export class ConfirmUserEmailUseCase
   constructor(private usersRepository: UsersRepository) {}
 
   async execute({ dto }: ConfirmUserEmailCommand): Promise<void> {
-    const user: User | null =
+    const user: UserDocument | null =
       await this.usersRepository.findUserByEmailConfirmationCode(dto.code);
 
     if (!user)
@@ -38,6 +38,6 @@ export class ConfirmUserEmailUseCase
 
     user.confirmEmail(dto.code);
 
-    await this.usersRepository.saveChange(user);
+    await this.usersRepository.save(user);
   }
 }

@@ -2,7 +2,7 @@ import { UsersRepository } from '../infrastructure/users.repository';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CryptoService } from './crypto.service';
 import { UserContextDTO } from '../guards/dto/user-context.dto';
-import { User } from '../domain/user.entity';
+import { UserDocument } from '../domain/user.entity';
 import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
@@ -30,7 +30,7 @@ export class AuthService {
     loginOrEmail: string,
     password: string,
   ): Promise<UserContextDTO> {
-    const user: User | null =
+    const user: UserDocument | null =
       await this.usersRepository.findUserByLoginOrEmail(loginOrEmail);
 
     if (!user) throw new UnauthorizedException();

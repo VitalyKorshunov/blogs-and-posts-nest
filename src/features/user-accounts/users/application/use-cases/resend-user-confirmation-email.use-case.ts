@@ -1,6 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EmailResendingInputDTO } from '../../api/input-dto/users.input-dto';
-import { User } from '../../domain/user.entity';
+import { UserDocument } from '../../domain/user.entity';
 import { BadRequestException } from '@nestjs/common';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailService } from '../email-service/email.service';
@@ -21,9 +21,8 @@ export class ResendUserConfirmationEmailUseCase
   ) {}
 
   async execute({ dto }: ResendUserConfirmationEmailCommand): Promise<void> {
-    const user: User | null = await this.usersRepository.findUserByLoginOrEmail(
-      dto.email,
-    );
+    const user: UserDocument | null =
+      await this.usersRepository.findUserByLoginOrEmail(dto.email);
 
     if (!user) {
       throw new BadRequestException([
@@ -44,7 +43,7 @@ export class ResendUserConfirmationEmailUseCase
     }
 
     user.changeEmailConfirmationCode();
-    await this.usersRepository.saveChange(user);
+    await this.usersRepository.save(user);
     this.emailService.registrationEmailResending(
       user.email,
       user.getEmailConfirmationCode(),

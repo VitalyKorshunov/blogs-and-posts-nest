@@ -1,6 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ChangeUserPasswordInputDTO } from '../../api/input-dto/users.input-dto';
-import { User } from '../../domain/user.entity';
+import { UserDocument } from '../../domain/user.entity';
 import { BadRequestException } from '@nestjs/common';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../crypto.service';
@@ -21,7 +21,7 @@ export class ChangeUserPasswordUseCase
   ) {}
 
   async execute({ dto }: ChangeUserPasswordCommand): Promise<void> {
-    const user: User | null =
+    const user: UserDocument | null =
       await this.usersRepository.findUserByPasswordRecoveryCode(
         dto.recoveryCode,
       );
@@ -49,6 +49,6 @@ export class ChangeUserPasswordUseCase
       newPassHash: newPassHash,
     });
 
-    await this.usersRepository.saveChange(user);
+    await this.usersRepository.save(user);
   }
 }
