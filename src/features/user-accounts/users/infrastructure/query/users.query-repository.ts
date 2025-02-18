@@ -77,15 +77,15 @@ export class UsersQueryRepository {
                  u."deletedAt",
                  u."createdAt",
                  u."updatedAt",
-                 rp."expirationPassDate",
+                 rp."expirationDate" as "expPassDate",
                  rp."recoveryCode",
-                 ec."expirationEmailDate",
+                 ec."expirationDate" as "expEmailDate",
                  ec."confirmationCode",
                  ec."isConfirmed"
           FROM (SELECT *
                 FROM users
                 WHERE id = $1
-                  AND "deletionStatus" = $2) as u
+                  AND deletionStatus = $2) as u
 
                    LEFT JOIN "recoveryPassword" as rp
                              ON rp."userId" = u.id
@@ -105,28 +105,31 @@ export class UsersQueryRepository {
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
     const result = await this.dataSource.query(
       `
-          WITH "usersTotalCount" AS (SELECT COUNT(*) AS count
-                                     FROM users
-                                     WHERE "deletionStatus" = $3)
-          SELECT users.*, "usersTotalCount".count AS "usersTotalCount"
-          FROM users,
-               "usersTotalCount"
+          WITH usersTotalCount AS (
+              SELECT COUNT(*) AS count
+              FROM users
+          )
+          SELECT users.*, usersTotalCount.count AS usersTotalCount
+          FROM users, usersTotalCount
           WHERE login ILIKE $1
             AND email ILIKE $2
             AND "deletionStatus" = $3
-          ORDER BY "${query.sortBy}" ${query.sortDirection}
-          LIMIT $4 OFFSET $5
-
+          ORDER BY $4 ${query.sortDirection}
+          LIMIT $5 OFFSET $6
+          
       `,
       [
-        `%${query.searchLoginTerm ? query.searchLoginTerm : ''}%`, //$1
-        `%${query.searchEmailTerm ? query.searchEmailTerm : ''}%`, //$2
-        DeletionStatus.NotDeleted, //$3
-        query.pageSize, //$4
-        query.calculateSkip(), //$5
+        `%${query.searchLoginTerm ? query.searchLoginTerm : ''}%`,
+        `%${query.searchEmailTerm ? query.searchEmailTerm : ''}%`,
+        DeletionStatus.NotDeleted,
+        query.sortBy,
+        query.pageSize,
+        query.calculateSkip(),
       ],
     );
-    const totalUsers = Number(result[0]?.usersTotalCount ?? 0);
+
+    const totalUsers = result[0].usersTotalCount;
+
     /*  const filter: FilterQuery<User> = {
       deletionStatus: DeletionStatus.NotDeleted,
     };

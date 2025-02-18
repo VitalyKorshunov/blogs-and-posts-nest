@@ -1,5 +1,5 @@
 export class EmailConfirmation {
-  expirationEmailDate: Date;
+  expirationDate: Date;
 
   confirmationCode: string;
 

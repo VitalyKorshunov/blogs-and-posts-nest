@@ -21,22 +21,6 @@ export const userEmailConstraints = {
   match: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
 };
 
-type UserRowDataFromDb = {
-  id: string;
-  login: string;
-  email: string;
-  passHash: string;
-  deletionStatus: DeletionStatus;
-  deletedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  expirationPassDate: Date;
-  recoveryCode: string;
-  expirationEmailDate: Date;
-  confirmationCode: string;
-  isConfirmed: boolean;
-};
-
 export class User {
   id: string;
 
@@ -67,11 +51,11 @@ export class User {
     user.email = dto.email;
     user.passHash = dto.passwordHash;
     user.recoveryPassword = {
-      expirationPassDate: new Date(),
+      expirationDate: new Date(),
       recoveryCode: randomUUID(),
     };
     user.emailConfirmation = {
-      expirationEmailDate: add(new Date(), {
+      expirationDate: add(new Date(), {
         hours: emailConfirmationCodeLifetimeInHours,
       }),
       confirmationCode: randomUUID(),
@@ -85,32 +69,16 @@ export class User {
     return user;
   }
 
-  static restoreUserFromDB(data: UserRowDataFromDb): User {
+  static restoreUserFromDB(data: User): User {
     const user = new this();
-    user.id = data.id;
-    user.login = data.login;
-    user.email = data.email;
-    user.passHash = data.passHash;
-    user.recoveryPassword = {
-      expirationPassDate: data.expirationPassDate,
-      recoveryCode: data.recoveryCode,
-    };
-    user.emailConfirmation = {
-      expirationEmailDate: data.expirationEmailDate,
-      confirmationCode: data.confirmationCode,
-      isConfirmed: data.isConfirmed,
-    };
-    user.createdAt = data.createdAt;
-    user.updatedAt = data.updatedAt;
-    user.deletionStatus = data.deletionStatus;
-    user.deletedAt = data.deletedAt;
+    Object.assign(user, data);
     return user;
   }
 
   canBeConfirmed(): boolean {
     return (
       this.emailConfirmation.isConfirmed === false &&
-      this.emailConfirmation.expirationEmailDate > new Date()
+      this.emailConfirmation.expirationDate > new Date()
     );
   }
 
@@ -121,7 +89,7 @@ export class User {
       throw new Error(`invalid email confirmation code`);
 
     this.emailConfirmation.isConfirmed = true;
-    this.emailConfirmation.expirationEmailDate = new Date();
+    this.emailConfirmation.expirationDate = new Date();
   }
 
   isEmailConfirmed(): boolean {
@@ -130,7 +98,7 @@ export class User {
 
   changeEmailConfirmationCode(): void {
     if (this.isEmailConfirmed()) throw new Error('email already confirm');
-    this.emailConfirmation.expirationEmailDate = add(new Date(), {
+    this.emailConfirmation.expirationDate = add(new Date(), {
       minutes: 10,
     });
     this.emailConfirmation.confirmationCode = randomUUID();
@@ -141,11 +109,11 @@ export class User {
   }
 
   isPassRecoveryCodeExpired(): boolean {
-    return this.recoveryPassword.expirationPassDate < new Date();
+    return this.recoveryPassword.expirationDate < new Date();
   }
 
   changePassRecoveryCode(passwordRecoveryCodeLifetimeInHours: number): void {
-    this.recoveryPassword.expirationPassDate = add(new Date(), {
+    this.recoveryPassword.expirationDate = add(new Date(), {
       hours: passwordRecoveryCodeLifetimeInHours,
     });
     this.recoveryPassword.recoveryCode = randomUUID();
@@ -162,7 +130,7 @@ export class User {
       throw new Error('invalid password recovery code');
 
     this.passHash = dto.newPassHash;
-    this.recoveryPassword.expirationPassDate = new Date();
+    this.recoveryPassword.expirationDate = new Date();
   }
 
   getPassHash(): string {

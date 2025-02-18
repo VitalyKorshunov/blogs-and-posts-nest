@@ -24,6 +24,7 @@ import { DeleteUserCommand } from '../application/use-cases/delete-user.use-case
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
 
 @Controller('users')
+@ApiBasicAuth()
 export class UsersController {
   constructor(
     private usersQueryRepository: UsersQueryRepository,
@@ -31,7 +32,6 @@ export class UsersController {
   ) {}
 
   @Post()
-  @ApiBasicAuth()
   @UseGuards(BasicAuthGuard)
   async createUser(
     @Body() createUserInputDTO: CreateUserInputDTO,
@@ -45,7 +45,6 @@ export class UsersController {
 
   @Delete(':userId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBasicAuth()
   @UseGuards(BasicAuthGuard)
   async deleteUser(
     @Param('userId', ObjectIdValidationPipe) userId: UserId,
