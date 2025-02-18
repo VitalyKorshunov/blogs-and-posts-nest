@@ -7,7 +7,6 @@ import {
   LikeModelType,
 } from '../../../likes/domain/like.entity';
 import {
-  CreateLikeDTO,
   LastNewestLikes,
   LikesAndDislikesCount,
 } from '../../../likes/domain/dto/like.dto';
@@ -44,36 +43,45 @@ export class UpdatePostLikeStatusUseCase
   ) {}
 
   async execute({ dto }: UpdatePostLikeStatusCommand): Promise<void> {
-    //TODO: Promise.all
-    const post: PostDocument =
-      await this.postsRepository.getPostByIdOrNotFoundError(dto.postId);
-
-    const user: UserDocument =
-      await this.usersRepository.getUserByIdOrNotFoundError(dto.userId);
-
-    let like: LikeDocument | null = await this.likesRepository.findLike(
+    const postPromise = this.postsRepository.getPostByIdOrNotFoundError(
       dto.postId,
+    );
+
+    const userPromise = this.usersRepository.getUserByIdOrNotFoundError(
       dto.userId,
     );
 
+    const likePromise = this.likesRepository.findLike(dto.postId, dto.userId);
+
+    const [post, user, like]: [
+      PostDocument,
+      UserDocument,
+      LikeDocument | null,
+    ] = await Promise.all([postPromise, userPromise, likePromise]);
+
     if (like) {
       like.updateLike(dto.likeStatus);
+
+      await this.likesRepository.save(like);
     } else {
-      const createLikeDTO: CreateLikeDTO = {
+      const like = this.LikeModel.createLike({
         commentOrPostId: dto.postId,
         likeStatus: dto.likeStatus,
         userId: dto.userId,
         login: user.login,
-      };
-      like = this.LikeModel.createLike(createLikeDTO);
+      });
+
+      await this.likesRepository.save(like);
     }
 
-    await this.likesRepository.save(like);
+    const [likesAndDislikesCount, lastThreeNewestLikes]: [
+      LikesAndDislikesCount,
+      LastNewestLikes[],
+    ] = await Promise.all([
+      this.likesRepository.getLikesAndDislikesCount(dto.postId),
 
-    const likesAndDislikesCount: LikesAndDislikesCount =
-      await this.likesRepository.getLikesAndDislikesCount(dto.postId);
-    const lastThreeNewestLikes: LastNewestLikes[] =
-      await this.likesRepository.getLastThreeNewestLikes(dto.postId);
+      this.likesRepository.getLastThreeNewestLikes(dto.postId),
+    ]);
 
     const updatePostLikesInfoDTO: UpdatePostLikesInfoDTO = {
       likesCount: likesAndDislikesCount.likesCount,

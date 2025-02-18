@@ -32,16 +32,18 @@ export class LikesRepository {
     postOrCommentId: string,
   ): Promise<LikesAndDislikesCount> {
     const parentObjectId = new ObjectId(postOrCommentId);
-    //TODO: Promise.all()
-    const likesCount = await this.LikeModel.countDocuments({
-      parentId: parentObjectId,
-      likeStatus: LikeStatus.Like,
-    });
 
-    const dislikesCount = await this.LikeModel.countDocuments({
-      parentId: parentObjectId,
-      likeStatus: LikeStatus.Dislike,
-    });
+    const [likesCount, dislikesCount] = await Promise.all([
+      this.LikeModel.countDocuments({
+        parentId: parentObjectId,
+        likeStatus: LikeStatus.Like,
+      }),
+
+      this.LikeModel.countDocuments({
+        parentId: parentObjectId,
+        likeStatus: LikeStatus.Dislike,
+      }),
+    ]);
 
     return {
       likesCount,

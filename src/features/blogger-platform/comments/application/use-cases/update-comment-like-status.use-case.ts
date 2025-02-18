@@ -1,20 +1,17 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { CommentDocument } from '../../domain/comment.entity';
 import { UserDocument } from '../../../../user-accounts/users/domain/user.entity';
 import {
   Like,
   LikeDocument,
   LikeModelType,
 } from '../../../likes/domain/like.entity';
-import {
-  CreateLikeDTO,
-  LikesAndDislikesCount,
-} from '../../../likes/domain/dto/like.dto';
+import { LikesAndDislikesCount } from '../../../likes/domain/dto/like.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentsRepository } from '../../infrastructure/comments.repository';
 import { UsersRepository } from '../../../../user-accounts/users/infrastructure/users.repository';
 import { LikesRepository } from '../../../likes/infrastucture/likes.repository';
 import { LikeStatus } from '../../../likes/domain/dto/like-status';
+import { CommentDocument } from '../../domain/comment.entity';
 
 class UpdateCommentLikeStatusCommandDTO {
   likeStatus: LikeStatus;
@@ -40,34 +37,38 @@ export class UpdateCommentLikeStatusUseCase
   ) {}
 
   async execute({ dto }: UpdateCommentLikeStatusCommand): Promise<void> {
-    //TODO: Promise.all
-    const comment: CommentDocument =
-      await this.commentsRepository.getCommentByIdOrNotFoundError(
-        dto.commentId,
-      );
+    const commentPromise =
+      this.commentsRepository.getCommentByIdOrNotFoundError(dto.commentId);
 
-    const user: UserDocument =
-      await this.usersRepository.getUserByIdOrNotFoundError(dto.userId);
+    const userPromise = this.usersRepository.getUserByIdOrNotFoundError(
+      dto.userId,
+    );
 
-    let like: LikeDocument | null = await this.likesRepository.findLike(
+    const likePromise = this.likesRepository.findLike(
       dto.commentId,
       dto.userId,
     );
 
+    const [comment, user, like]: [
+      CommentDocument,
+      UserDocument,
+      LikeDocument | null,
+    ] = await Promise.all([commentPromise, userPromise, likePromise]);
+
     if (like) {
       like.updateLike(dto.likeStatus);
+
+      await this.likesRepository.save(like);
     } else {
-      const createLikeDTO: CreateLikeDTO = {
+      const like = this.LikeModel.createLike({
         commentOrPostId: dto.commentId,
         userId: dto.userId,
         login: user.login,
         likeStatus: dto.likeStatus,
-      };
+      });
 
-      like = this.LikeModel.createLike(createLikeDTO);
+      await this.likesRepository.save(like);
     }
-
-    await this.likesRepository.save(like);
 
     const likesAndDislikesCount: LikesAndDislikesCount =
       await this.likesRepository.getLikesAndDislikesCount(dto.commentId);

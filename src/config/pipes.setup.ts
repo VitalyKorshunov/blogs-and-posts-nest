@@ -5,13 +5,11 @@ import {
 } from '@nestjs/common';
 
 export const errorFormatter = (errors: any) => {
-  const errorsForResponse = [];
+  const errorsForResponse: { field: string; message: string }[] = [];
 
   errors.forEach((e) => {
     const constraintsKeys = Object.keys(e.constraints);
     constraintsKeys.forEach((key) => {
-      //TODO: Переделать
-      // @ts-expect-error
       errorsForResponse.push({
         message: e.constraints[key],
         field: e.property,
