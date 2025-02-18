@@ -1,3 +1,5 @@
+import { HydratedDocument, Model } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { CreateBlogDTO, UpdateBlogDTO } from './dto/blog.dto';
 import { DeletionStatus } from '../../../../core/dto/deletion-status';
 import { BadRequestException } from '@nestjs/common';
@@ -20,64 +22,49 @@ export const blogWebsiteUrlConstraints = {
   ),
 };
 
-type BlogRowDataFromDB = {
-  id: string;
-  name: string;
-  description: string;
-  websiteUrl: string;
-  isMembership: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  deletionStatus: DeletionStatus;
-  deletedAt: Date | null;
-};
-
+@Schema({ timestamps: true })
 export class Blog {
-  id: string;
+  @Prop({ type: String, required: true, ...blogNameConstraints })
   name: string;
+
+  @Prop({ type: String, required: true, ...blogDescriptionConstraints })
   description: string;
+
+  @Prop({ type: String, required: true, ...blogWebsiteUrlConstraints })
   websiteUrl: string;
+
+  @Prop({ type: Boolean, required: true, default: false })
   isMembership: boolean;
+
+  @Prop({ type: Date })
   createdAt: Date;
+
+  @Prop({ type: Date })
   updatedAt: Date;
+
+  @Prop({
+    enum: DeletionStatus,
+    type: String,
+    default: DeletionStatus.NotDeleted,
+  })
   deletionStatus: DeletionStatus;
+
+  @Prop({ type: Date, default: null })
   deletedAt: Date | null;
 
-  static createBlog(dto: CreateBlogDTO): Blog {
+  static createBlog(dto: CreateBlogDTO): BlogDocument {
     const blog = new this();
     blog.name = dto.name;
     blog.description = dto.description;
     blog.websiteUrl = dto.websiteUrl;
-    blog.isMembership = false;
-    blog.createdAt = new Date();
-    blog.updatedAt = new Date();
-    blog.deletionStatus = DeletionStatus.NotDeleted;
-    blog.deletedAt = null;
 
-    return blog;
-  }
-
-  static restoreBlogFromDB(dto: BlogRowDataFromDB): Blog {
-    const blog = new this();
-    blog.id = dto.id;
-    blog.name = dto.name;
-    blog.description = dto.description;
-    blog.websiteUrl = dto.websiteUrl;
-    blog.isMembership = dto.isMembership;
-    blog.createdAt = dto.createdAt;
-    blog.updatedAt = dto.updatedAt;
-    blog.deletionStatus = dto.deletionStatus;
-    blog.deletedAt = dto.deletedAt;
-
-    return blog;
+    return blog as BlogDocument;
   }
 
   updateBlog(dto: UpdateBlogDTO): void {
     this.name = dto.name;
     this.description = dto.description;
     this.websiteUrl = dto.websiteUrl;
-
-    this.updatedAt = new Date();
   }
 
   permanentDelete(): void {
@@ -87,15 +74,13 @@ export class Blog {
 
     this.deletionStatus = DeletionStatus.PermanentDeleted;
     this.deletedAt = new Date();
-
-    this.updatedAt = new Date();
   }
 }
 
-/*export const BlogSchema = SchemaFactory.createForClass(Blog);
+export const BlogSchema = SchemaFactory.createForClass(Blog);
 
 BlogSchema.loadClass(Blog);
 
 export type BlogDocument = HydratedDocument<Blog>;
 
-export type BlogModelType = Model<BlogDocument> & typeof Blog;*/
+export type BlogModelType = Model<BlogDocument> & typeof Blog;
