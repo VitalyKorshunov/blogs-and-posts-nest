@@ -17,6 +17,6 @@ export class DeleteUserUseCase
     const user: User =
       await this.usersRepository.getUserByIdOrNotFoundError(userId);
     user.permanentDelete();
-    await this.usersRepository.updateUser(user);
+    await this.usersRepository.saveChange(user);
   }
 }

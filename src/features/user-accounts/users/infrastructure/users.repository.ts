@@ -100,6 +100,9 @@ export class UsersRepository {
 
     if (!result.length) throw new NotFoundException('user not found');
 
+    console.log(typeof result[0].createdAt);
+    console.log(typeof result[0].deletionStatus);
+
     return User.restoreUserFromDB(result[0]);
   }
 
@@ -209,7 +212,7 @@ export class UsersRepository {
     }
   }
 
-  async updateUser(user: User): Promise<void> {
+  async saveChange(user: User): Promise<void> {
     try {
       await this.dataSource.query(
         `

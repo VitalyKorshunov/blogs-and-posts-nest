@@ -36,23 +36,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
 
     if (status === HttpStatus.BAD_REQUEST) {
-      const errorResponse: {
-        errorsMessages: { field: string; message: string }[];
-      } = {
+      const errorResponse = {
         errorsMessages: [],
       };
       const responseBody: any = exception.getResponse();
 
-      if (Array.isArray(responseBody.message)) {
-        responseBody.message.forEach((m) =>
-          errorResponse.errorsMessages.push(m),
-        );
-      } else {
-        errorResponse.errorsMessages.push({
-          field: 'unknown',
-          message: 'unknown field',
-        });
-      }
+      responseBody.message.forEach((m) =>
+        //TODO: Переписать
+        // @ts-expect-error
+        errorResponse.errorsMessages.push(m),
+      );
 
       response.status(status).json(errorResponse);
     } else {

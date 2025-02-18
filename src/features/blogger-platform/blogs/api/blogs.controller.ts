@@ -31,12 +31,13 @@ import { DeleteBlogCommand } from '../application/use-cases/delete-blog.use-case
 import { CreatePostCommand } from '../../posts/application/use-cases/create-post.use-case';
 import { ApiBasicAuth } from '@nestjs/swagger';
 import { BasicAuthGuard } from '../../../user-accounts/users/guards/basic/basic.guard';
+import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
 import { AccessTokenOptionalAuthGuard } from '../../../user-accounts/users/guards/bearer/access-token-optional-auth.guard';
 import { ExtractUserOptionalFromRequest } from '../../../user-accounts/users/guards/decorators/extract-user-from-request.decorator';
 import { UserOptionalContextDTO } from '../../../user-accounts/users/guards/dto/user-context.dto';
 import { PostId } from '../../posts/domain/dto/post.dto';
 
-@Controller('sa/blogs')
+@Controller('blogs')
 export class BlogsControllers {
   constructor(
     private blogsQueryRepository: BlogsQueryRepository,
@@ -63,21 +64,17 @@ export class BlogsControllers {
       }),
     );
 
-    return await this.blogsQueryRepository.getBlogByIdAndNotDeletedOrNotFoundError(
-      blogId,
-    );
+    return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
   @Get(':blogId/posts')
   @UseGuards(AccessTokenOptionalAuthGuard)
   async getAllPostsForBlog(
-    @Param('blogId') blogId: BlogId,
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
     @Query() query: GetPostsQueryParamsInputDTO,
     @ExtractUserOptionalFromRequest() user: UserOptionalContextDTO,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    await this.blogsQueryRepository.checkBlogByIdAndNotDeletedFoundOrNotFoundError(
-      blogId,
-    );
+    await this.blogsQueryRepository.checkBlogFoundOrNotFoundError(blogId);
 
     return await this.postsQueryRepository.getAllPostsForBlog(
       {
@@ -92,7 +89,7 @@ export class BlogsControllers {
   @UseGuards(BasicAuthGuard)
   @ApiBasicAuth()
   async createPostInBlog(
-    @Param('blogId') blogId: BlogId,
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
     @Body() createPostForBlogInputDTO: CreatePostForBlogInputDTO,
   ): Promise<PostViewDto> {
     const postId: PostId = await this.commandBus.execute(
@@ -110,10 +107,10 @@ export class BlogsControllers {
   }
 
   @Get(':blogId')
-  async getBlog(@Param('blogId') blogId: BlogId): Promise<BlogViewDto> {
-    return await this.blogsQueryRepository.getBlogByIdAndNotDeletedOrNotFoundError(
-      blogId,
-    );
+  async getBlog(
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
+  ): Promise<BlogViewDto> {
+    return await this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
   @Put(':blogId')
@@ -122,7 +119,7 @@ export class BlogsControllers {
   @ApiBasicAuth()
   async updateBlog(
     @Body() updateBlogInputDTO: UpdateBlogInputDTO,
-    @Param('blogId') blogId: BlogId,
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
   ): Promise<BlogViewDto> {
     await this.commandBus.execute(
       new UpdateBlogCommand({
@@ -133,16 +130,16 @@ export class BlogsControllers {
       }),
     );
 
-    return this.blogsQueryRepository.getBlogByIdAndNotDeletedOrNotFoundError(
-      blogId,
-    );
+    return this.blogsQueryRepository.getBlogByIdOrNotFoundError(blogId);
   }
 
   @Delete(':blogId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(BasicAuthGuard)
   @ApiBasicAuth()
-  async deleteBlog(@Param('blogId') blogId: BlogId): Promise<void> {
+  async deleteBlog(
+    @Param('blogId', ObjectIdValidationPipe) blogId: BlogId,
+  ): Promise<void> {
     await this.commandBus.execute(new DeleteBlogCommand(blogId));
   }
 }
