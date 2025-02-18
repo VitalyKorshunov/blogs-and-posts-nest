@@ -1,5 +1,10 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Security } from '../../domain/security.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  Security,
+  SecurityDocument,
+  SecurityModelType,
+} from '../../domain/security.entity';
 import { SecurityRepository } from '../../infrastructure/security.repository';
 import { AuthService } from '../../../users/application/auth.service';
 import { RefreshTokenPayloadDTO } from '../../../users/guards/dto/tokens.dto';
@@ -21,6 +26,7 @@ export class CreateSessionUseCase
   implements ICommandHandler<CreateSessionCommand>
 {
   constructor(
+    @InjectModel(Security.name) private SecurityModel: SecurityModelType,
     private securityRepository: SecurityRepository,
     private authService: AuthService,
   ) {}
@@ -29,7 +35,7 @@ export class CreateSessionUseCase
     const payload: RefreshTokenPayloadDTO =
       this.authService.getRefreshTokenPayload(dto.refreshToken);
 
-    const session: Security = Security.createSession({
+    const session: SecurityDocument = this.SecurityModel.createSession({
       userId: payload.userId,
       deviceId: payload.deviceId,
       deviceName: dto.deviceName,
@@ -38,6 +44,6 @@ export class CreateSessionUseCase
       expireAt: new Date(payload.exp * 1000).toISOString(),
     });
 
-    await this.securityRepository.createSession(session);
+    await this.securityRepository.save(session);
   }
 }

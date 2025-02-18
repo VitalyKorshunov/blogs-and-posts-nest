@@ -23,7 +23,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { DeleteUserCommand } from '../application/use-cases/delete-user.use-case';
 import { ObjectIdValidationPipe } from '../../../../core/object-id-validation-transformation.pipe';
 
-@Controller('sa/users')
+@Controller('users')
 export class UsersController {
   constructor(
     private usersQueryRepository: UsersQueryRepository,

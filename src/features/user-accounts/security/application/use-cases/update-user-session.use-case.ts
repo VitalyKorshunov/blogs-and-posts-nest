@@ -1,9 +1,9 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SecurityRepository } from '../../infrastructure/security.repository';
+import { SecurityDocument } from '../../domain/security.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../../../users/application/auth.service';
 import { RefreshTokenPayloadDTO } from '../../../users/guards/dto/tokens.dto';
-import { Security } from '../../domain/security.entity';
 
 class UpdateUserSessionCommandDTO {
   refreshToken: string;
@@ -28,9 +28,10 @@ export class UpdateUserSessionUseCase
     const refreshTokenPayload: RefreshTokenPayloadDTO =
       this.authService.getRefreshTokenPayload(dto.refreshToken);
 
-    const session: Security | null =
+    const session: SecurityDocument | null =
       await this.securityRepository.findUserSessionByDeviceId(
         refreshTokenPayload.deviceId,
+        refreshTokenPayload.lastActiveDate,
       );
 
     if (!session) {
@@ -42,6 +43,6 @@ export class UpdateUserSessionUseCase
       expireAt: new Date(refreshTokenPayload.exp * 1000).toISOString(),
     });
 
-    await this.securityRepository.updateSession(session);
+    await this.securityRepository.save(session);
   }
 }

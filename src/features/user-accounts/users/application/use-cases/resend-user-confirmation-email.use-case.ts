@@ -4,7 +4,6 @@ import { User } from '../../domain/user.entity';
 import { BadRequestException } from '@nestjs/common';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailService } from '../email-service/email.service';
-import { UserAccountsConfig } from '../../../user-accounts.config';
 
 export class ResendUserConfirmationEmailCommand extends Command<void> {
   constructor(public dto: EmailResendingInputDTO) {
@@ -19,7 +18,6 @@ export class ResendUserConfirmationEmailUseCase
   constructor(
     private usersRepository: UsersRepository,
     private emailService: EmailService,
-    private userAccountsConfig: UserAccountsConfig,
   ) {}
 
   async execute({ dto }: ResendUserConfirmationEmailCommand): Promise<void> {
@@ -45,9 +43,7 @@ export class ResendUserConfirmationEmailUseCase
       ]);
     }
 
-    user.changeEmailConfirmationCode(
-      this.userAccountsConfig.emailConfirmationCodeExpiresInHours,
-    );
+    user.changeEmailConfirmationCode();
     await this.usersRepository.saveChange(user);
     this.emailService.registrationEmailResending(
       user.email,
